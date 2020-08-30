@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
-	"github.com/gorilla/mux"
-
 	"github.com/aditiharini/drone-monitor/api"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
