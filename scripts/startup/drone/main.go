@@ -17,7 +17,7 @@ func main() {
 
 	// Turn saturatr on and off
 	for {
-		saturatrCmd := exec.Command(saturatrDir+"saturatr", "ip", "eth1", "ip", "eth2", "3.91.1.79")
+		saturatrCmd := exec.Command(saturatrDir+"saturatr", "192.168.0.100", "eth1", "192.168.0.101", "eth2", "3.91.1.79")
 		if err := saturatrCmd.Start(); err != nil {
 			fmt.Printf("Error starting saturatr %v\n", err)
 		}
