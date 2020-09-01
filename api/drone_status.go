@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"sync"
 )
 
@@ -55,12 +56,22 @@ func (s *State) HandleDji(res http.ResponseWriter, req *http.Request) {
 	s.mux.Unlock()
 }
 
+func createSaturatrState(req *http.Request) SaturatrState {
+	var saturatr SaturatrState
+	var err error
+	saturatr.Acker.Sent, err = strconv.ParseInt(req.FormValue("acker_packets_sent"), 10, 64)
+	saturatr.Acker.Received, err = strconv.ParseInt(req.FormValue("acker_packets_received"), 10, 64)
+	saturatr.Saturatr.Sent, err = strconv.ParseInt(req.FormValue("saturatr_packets_sent"), 10, 64)
+	saturatr.Saturatr.Received, err = strconv.ParseInt(req.FormValue("saturatr_packets_received"), 10, 64)
+	if err != nil {
+		fmt.Printf("Problem handling server saturatr %v", err)
+	}
+	return saturatr
+}
+
 func (s *State) HandleDroneSaturatr(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("Post request from drone saturatr")
-	var saturatr SaturatrState
-	if err := json.NewDecoder(req.Body).Decode(&saturatr); err != nil {
-		fmt.Printf("Problem handling drone saturatr %v\n", err)
-	}
+	saturatr := createSaturatrState(req)
 	s.mux.Lock()
 	s.Drone.Saturatr = saturatr
 	s.mux.Unlock()
@@ -68,10 +79,7 @@ func (s *State) HandleDroneSaturatr(res http.ResponseWriter, req *http.Request) 
 
 func (s *State) HandleServerSaturatr(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("Post request from server saturatr")
-	var saturatr SaturatrState
-	if err := json.NewDecoder(req.Body).Decode(&saturatr); err != nil {
-		fmt.Printf("Problem handling server saturatr %v\n", err)
-	}
+	saturatr := createSaturatrState(req)
 	s.mux.Lock()
 	s.Server.Saturatr = saturatr
 	s.mux.Unlock()

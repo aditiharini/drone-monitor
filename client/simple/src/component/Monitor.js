@@ -47,12 +47,18 @@ class Monitor extends Component {
             <div>
                 <div>
                     <h2>Drone</h2>
-                    <Dji status={this.state.drone.dji}></Dji>
-                    <Saturatr status={this.state.drone.saturatr}></Saturatr>
+                    { this.state.drone && 
+                        <div>
+                            <Dji status={this.state.drone.dji}></Dji>
+                            <Saturatr status={this.state.drone.saturatr}></Saturatr>
+                        </div>
+                    }
                 </div>
                 <div>
                     <h2>Server</h2>
-                    <Saturatr status={this.state.server.saturatr}></Saturatr>
+                    { this.state.server && 
+                        <Saturatr status={this.state.server.saturatr}></Saturatr>
+                    }
                 </div>
             </div>
         )
