@@ -12,6 +12,8 @@ type State struct {
 	Drone struct {
 		Dji      DjiState      `json:"dji"`
 		Saturatr SaturatrState `json:"saturatr"`
+		Download float64       `json:"download"`
+		Upload   float64       `json:"upload"`
 	} `json:"drone"`
 	Server struct {
 		Saturatr SaturatrState `json:"saturatr"`
@@ -72,7 +74,9 @@ func createSaturatrState(req *http.Request) SaturatrState {
 func (s *State) HandleDroneSaturatr(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("Post request from drone saturatr")
 	saturatr := createSaturatrState(req)
+	download := float64(saturatr.Acker.Received-s.Drone.Saturatr.Acker.Received) * 1400. / 1000000.
 	s.mux.Lock()
+	s.Drone.Download = download
 	s.Drone.Saturatr = saturatr
 	s.mux.Unlock()
 }
@@ -80,7 +84,9 @@ func (s *State) HandleDroneSaturatr(res http.ResponseWriter, req *http.Request) 
 func (s *State) HandleServerSaturatr(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("Post request from server saturatr")
 	saturatr := createSaturatrState(req)
+	upload := float64(saturatr.Acker.Received-s.Server.Saturatr.Acker.Received) * 1400. / 1000000.
 	s.mux.Lock()
+	s.Drone.Upload = upload
 	s.Server.Saturatr = saturatr
 	s.mux.Unlock()
 }

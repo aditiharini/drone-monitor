@@ -26,10 +26,13 @@ class Monitor extends Component {
         .then( 
             (result) => {
                 console.log(result)
+		result.drone.dji.altitude = result.drone.dji.gps[2]
                 this.setState({
                     drone : {
                         dji : result.drone.dji,
-                        saturatr : result.drone.saturatr
+                        saturatr : result.drone.saturatr,
+			upload : result.drone.upload,
+			download : result.drone.download
                     },
                     server : {
                         saturatr : result.server.saturatr
@@ -51,6 +54,8 @@ class Monitor extends Component {
                         <div>
                             <Dji status={this.state.drone.dji}></Dji>
                             <Saturatr status={this.state.drone.saturatr}></Saturatr>
+			    <p>upload: {this.state.drone.upload} Mbps</p>
+			    <p>download: {this.state.drone.download} Mbps</p>
                         </div>
                     }
                 </div>
