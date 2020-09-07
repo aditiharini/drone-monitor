@@ -74,7 +74,7 @@ func createSaturatrState(req *http.Request) SaturatrState {
 func (s *State) HandleDroneSaturatr(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("Post request from drone saturatr")
 	saturatr := createSaturatrState(req)
-	download := float64(saturatr.Acker.Received-s.Drone.Saturatr.Acker.Received) * 1400. / 1000000.
+	download := float64(saturatr.Acker.Received-s.Drone.Saturatr.Acker.Received) * 8. * 1400. / 1000000.
 	s.mux.Lock()
 	s.Drone.Download = download
 	s.Drone.Saturatr = saturatr
@@ -84,7 +84,7 @@ func (s *State) HandleDroneSaturatr(res http.ResponseWriter, req *http.Request) 
 func (s *State) HandleServerSaturatr(res http.ResponseWriter, req *http.Request) {
 	fmt.Println("Post request from server saturatr")
 	saturatr := createSaturatrState(req)
-	upload := float64(saturatr.Acker.Received-s.Server.Saturatr.Acker.Received) * 1400. / 1000000.
+	upload := float64(saturatr.Acker.Received-s.Server.Saturatr.Acker.Received) * 8. * 1400. / 1000000.
 	s.mux.Lock()
 	s.Drone.Upload = upload
 	s.Server.Saturatr = saturatr
