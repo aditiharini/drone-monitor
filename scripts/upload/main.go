@@ -41,6 +41,15 @@ func upload(from string, to string) {
 	}
 }
 
+func move(from string, to string) {
+	moveCmd := fmt.Sprintf("mv %s %s", from, to)
+	out, err := exec.Command("bash", "-c", moveCmd).CombinedOutput()
+	if err != nil {
+		print(string(out))
+		panic(err)
+	}
+}
+
 type DirectoryStructure struct {
 	name     string
 	children []DirectoryStructure
@@ -68,7 +77,6 @@ func main() {
 	trace := flag.String("trace", "", "trace to be processed")
 	name := flag.String("name", "", "folder to upload to")
 	flag.Parse()
-	fmt.Println("trace", *trace)
 	allIds := allSenderIds(*trace)
 	uploadDir := fmt.Sprintf("~/Drone-Project/measurements/saturatr_traces/%s", *name)
 	dirStructure := DirectoryStructure{
@@ -85,12 +93,11 @@ func main() {
 			print(string(out))
 			panic(err)
 		}
-		if *name != "" {
-			upload(fmt.Sprintf("uplink-%s", id), uploadDir)
-		}
+		move(fmt.Sprintf("uplink-%s.pps", id), "tmp/processed")
 	}
 
+	move(*trace, "tmp/raw")
 	if *name != "" {
-		upload(*trace, uploadDir)
+		upload("tmp", uploadDir)
 	}
 }
