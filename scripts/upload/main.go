@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	traces "github.com/aditiharini/drone-monitor/scripts/traces"
 )
 
 func allSenderIds(filename string) []string {
@@ -33,8 +35,8 @@ func allSenderIds(filename string) []string {
 }
 
 func upload(from string, to string) {
-	uploadCmd := fmt.Sprintf("upload %s %s", from, to)
-	out, err := exec.Command("~/dropbox_uploader.sh", uploadCmd).CombinedOutput()
+	uploadCmd := fmt.Sprintf("/home/ubuntu/dropbox_uploader.sh upload %s %s", from, to)
+	out, err := exec.Command("bash", "-c", uploadCmd).CombinedOutput()
 	if err != nil {
 		print(string(out))
 		panic(err)
@@ -44,6 +46,15 @@ func upload(from string, to string) {
 func move(from string, to string) {
 	moveCmd := fmt.Sprintf("mv %s %s", from, to)
 	out, err := exec.Command("bash", "-c", moveCmd).CombinedOutput()
+	if err != nil {
+		print(string(out))
+		panic(err)
+	}
+}
+
+func copy(from string, to string) {
+	copyCmd := fmt.Sprintf("cp %s %s", from, to)
+	out, err := exec.Command("bash", "-c", copyCmd).CombinedOutput()
 	if err != nil {
 		print(string(out))
 		panic(err)
@@ -78,12 +89,18 @@ func main() {
 	name := flag.String("name", "", "folder to upload to")
 	flag.Parse()
 	allIds := allSenderIds(*trace)
-	uploadDir := fmt.Sprintf("~/Drone-Project/measurements/saturatr_traces/%s", *name)
+	uploadDir := fmt.Sprintf("Drone-Project/measurements/saturatr_traces/%s", *name)
 	dirStructure := DirectoryStructure{
 		name: "tmp",
 		children: []DirectoryStructure{
 			{name: "raw"},
-			{name: "processed"},
+			{
+				name: "processed",
+				children: []DirectoryStructure{
+					{name: "stats"},
+					{name: "traces"},
+				},
+			},
 		},
 	}
 	dirStructure.create()
@@ -93,10 +110,13 @@ func main() {
 			print(string(out))
 			panic(err)
 		}
-		move(fmt.Sprintf("uplink-%s.pps", id), "tmp/processed")
+		move(fmt.Sprintf("uplink-%s.pps", id), "tmp/processed/traces")
+		latencyFile := fmt.Sprintf("tmp/processed/stats/latency-%s.csv", id)
+		throughputFile := fmt.Sprintf("tmp/processed/stats/throughput-%s.csv", id)
+		traces.WriteCsvData(*trace, id, latencyFile, throughputFile)
 	}
 
-	move(*trace, "tmp/raw")
+	copy(*trace, "tmp/raw")
 	if *name != "" {
 		upload("tmp", uploadDir)
 	}

@@ -8,7 +8,7 @@ fh=open(file_name,"r");
 session_number=int(sys.argv[2]);
 
 #parse file_name to determine client vs server log_pos-timestamp-sessionID
-log_details=file_name.split("-")
+log_details=file_name.split("/")[-1].split("-")
 log_pos=log_details[0];
 
 if(log_pos=="client") :
