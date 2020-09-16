@@ -1,1 +1,7 @@
 drone-monitor
+scripts/startup/server/server
+scripts/startup/server/server-*
+scripts/teardown/server/server
+scripts/upload/tmp/*
+scripts/upload/upload
+*.pcap

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os/exec"
 	"time"
+
+	"github.com/aditiharini/drone-monitor/scripts/utils"
 )
 
 func run(cmd *exec.Cmd, tag string, printStdout bool, printStderr bool) {
@@ -58,15 +60,21 @@ func main() {
 	interestmapsDir := "/home/ubuntu/interestmaps/"
 	interestmapsCmd := exec.Command(interestmapsDir+"interestmaps", interestmapsDir+"interestmaps-real.cfg")
 	run(interestmapsCmd, "[interestmaps]", true, true)
-	fmt.Println("Starting saturatr")
 	time.Sleep(2 * time.Second)
 
-	saturatrDir := "/home/ubuntu/data/multisend/sender/"
-	saturatrCmd := exec.Command(saturatrDir+"saturatr", "real")
-	run(saturatrCmd, "[saturatr]", true, true)
+	iperfCmd := exec.Command("bash", "-c", "iperf3 -s")
+	run(iperfCmd, "[iperf]", true, true)
+	fmt.Println("Starting iperf")
+	time.Sleep(2 * time.Second)
 
+	outfile := fmt.Sprintf("srv-%d", time.Now().Unix())
+	tcpdumpCmd := exec.Command("bash", "-c", fmt.Sprintf("sudo tcpdump -n -i eth0 -w %s dst port 5201", outfile))
+	utils.RunCmd(tcpdumpCmd, "[tcpdump]", true, true)
+	time.Sleep(2 * time.Second)
+
+	iperfCmd.Wait()
+	tcpdumpCmd.Wait()
 	monitorCmd.Wait()
 	frontendCmd.Wait()
 	interestmapsCmd.Wait()
-	saturatrCmd.Wait()
 }
