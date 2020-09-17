@@ -75,7 +75,7 @@ func main() {
 	startTime := time.Now().Unix()
 	count := 0
 
-	proto := "-u"
+	proto := "-u -b 30M"
 	if *useTcp {
 		proto = ""
 	}
@@ -83,7 +83,7 @@ func main() {
 	for {
 		fmt.Printf("[iperf] starting")
 		iperfOutfile := fmt.Sprintf("%d-%d.iperf", startTime, count)
-		iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 %s -b 30M -t %d -c 3.91.1.79 > %s", proto, 60, iperfOutfile))
+		iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 %s -t %d -c 3.91.1.79 > %s", proto, 60, iperfOutfile))
 		run(iperfCmd, "iperf", true, true)
 
 		pingOutfile := fmt.Sprintf("%d-%d.ping", startTime, count)
