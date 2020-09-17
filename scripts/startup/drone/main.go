@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"os/exec"
 	"time"
@@ -61,25 +62,38 @@ func setupDevices() {
 }
 
 func main() {
-	setupDevices()
-	time.Sleep(10 * time.Second)
+	useTcp := flag.Bool("tcp", false, "iperf protocol")
+	flag.Parse()
+
 	out, err := exec.Command("ifconfig").CombinedOutput()
 	fmt.Println("[ifconfig]", string(out))
 	if err != nil {
 		panic(err)
 	}
 
-	interestmapsDir := "/home/pi/interestmaps/"
-	interestmapsCmd := exec.Command("bash", "-c", fmt.Sprintf("cd %s; go run launch.go interestmaps-real.cfg 0 drone", interestmapsDir))
-	run(interestmapsCmd, "[interestmaps]", true, true)
-	time.Sleep(20 * time.Second)
-
 	// Turn saturatr on and off
+	startTime := time.Now().Unix()
+	count := 0
+
+	proto := "-u"
+	if *useTcp {
+		proto = ""
+	}
+
 	for {
 		fmt.Printf("[iperf] starting")
-		iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 -u -b 25M -t %d -c 3.91.1.79", 60))
+		iperfOutfile := fmt.Sprintf("%d-%d.iperf", startTime, count)
+		iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 %s -b 30M -t %d -c 3.91.1.79 > %s", proto, 60, iperfOutfile))
 		run(iperfCmd, "iperf", true, true)
+
+		pingOutfile := fmt.Sprintf("%d-%d.ping", startTime, count)
+		pingCmd := exec.Command("bash", "-c", fmt.Sprintf("ping -i 1 3.91.1.79 > %s", pingOutfile))
+		run(pingCmd, "ping", true, true)
+
 		iperfCmd.Wait()
+		pingCmd.Process.Kill()
+		count++
+
 		time.Sleep(1 * time.Minute)
 		fmt.Printf("[iperf] stopping")
 	}
