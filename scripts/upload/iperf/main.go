@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	trace "github.com/aditiharini/drone-monitor/scripts/traces"
 )
@@ -18,9 +17,8 @@ func main() {
 	}
 	processor := trace.PcapProcessor{Filename: *tracefile, Filter: proto, CurrentFilenum: 0}
 	processor.ToMahiMahi()
-	for i, file := range processor.MahimahiFiles {
-		fmt.Printf("====== Trace %d ======\n", i)
+	for _, file := range processor.MahimahiFiles {
 		mmTrace := trace.MahimahiTrace{Filename: file, PacketSize: 1500}
-		mmTrace.PrintBandwidth()
+		mmTrace.PrintBandwidth(false)
 	}
 }

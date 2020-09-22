@@ -62,6 +62,12 @@ func main() {
 	run(interestmapsCmd, "[interestmaps]", true, true)
 	time.Sleep(2 * time.Second)
 
+	out, err := exec.Command("bash", "-c", "sudo ethtool -K eth0 gro off").CombinedOutput()
+	if err != nil {
+		fmt.Println(string(out))
+		panic(err)
+	}
+
 	iperfOutfile := fmt.Sprintf("%d.iperf", time.Now().Unix())
 	iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -s | tee %s", iperfOutfile))
 	run(iperfCmd, "[iperf]", true, true)

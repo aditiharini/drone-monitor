@@ -4,4 +4,9 @@ scripts/startup/server/server-*
 scripts/teardown/server/server
 scripts/upload/tmp/*
 scripts/upload/upload
+scripts/upload/iperf/iperf
 *.pcap
+*.csv
+*.uplink
+*.iperf
+*.tshark

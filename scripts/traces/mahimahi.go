@@ -2,9 +2,11 @@ package trace
 
 import (
 	"bufio"
+	"encoding/csv"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type MahimahiTrace struct {
@@ -12,10 +14,22 @@ type MahimahiTrace struct {
 	PacketSize int
 }
 
-func (m *MahimahiTrace) PrintBandwidth() {
+func (m *MahimahiTrace) PrintBandwidth(stdout bool) {
 	file, err := os.Open(m.Filename)
 	if err != nil {
 		panic(err)
+	}
+	var tputCsvWriter *csv.Writer
+	if !stdout {
+		tputCsvName := strings.Split(m.Filename, ".")[0] + ".csv"
+		tputCsv, err := os.Create(tputCsvName)
+		if err != nil {
+			panic(err)
+		}
+		defer tputCsv.Close()
+		tputCsvWriter = csv.NewWriter(tputCsv)
+		tputCsvWriter.Write([]string{"time", "throughput"})
+		defer tputCsvWriter.Flush()
 	}
 	scanner := bufio.NewScanner(file)
 	lastCalcTime := -1
@@ -35,8 +49,11 @@ func (m *MahimahiTrace) PrintBandwidth() {
 			numMbits := numBits / 1000000.
 			elapsed := float64(curTime-lastCalcTime) / 1000.
 			mbps := numMbits / elapsed
-			fmt.Println(mbps)
-
+			if stdout {
+				fmt.Println(mbps)
+			} else {
+				tputCsvWriter.Write([]string{strconv.Itoa(lastCalcTime), strconv.Itoa(int(mbps))})
+			}
 			numPackets = 0
 			lastCalcTime = curTime
 		}
