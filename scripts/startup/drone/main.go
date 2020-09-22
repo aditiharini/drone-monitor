@@ -85,11 +85,11 @@ func main() {
 
 		// Do upload
 		iperfUploadOutfile := fmt.Sprintf("%d-%d-up.iperf", startTime, count)
-		iperfUploadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 %s -t %d -c 3.91.1.79 > %s", proto, 60, iperfUploadOutfile))
+		iperfUploadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 %s -t %d -c 3.91.1.79 > %s", proto, 10, iperfUploadOutfile))
 		run(iperfUploadCmd, "iperf", true, true)
 
-		pingOutfile := fmt.Sprintf("%d-%d.ping", startTime, count)
-		pingCmd := exec.Command("bash", "-c", fmt.Sprintf("ping -i 1 3.91.1.79 > %s", pingOutfile))
+		pingUpOutfile := fmt.Sprintf("%d-%d-up.ping", startTime, count)
+		pingCmd := exec.Command("bash", "-c", fmt.Sprintf("ping -i 1 3.91.1.79 > %s", pingUpOutfile))
 		run(pingCmd, "ping", true, true)
 
 		iperfUploadCmd.Wait()
@@ -97,8 +97,11 @@ func main() {
 
 		// Do download
 		iperfDownloadOutfile := fmt.Sprintf("%d-%d-down.iperf", startTime, count)
-		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 -R %s -t %d -c 3.91.1.79 > %s", proto, 60, iperfDownloadOutfile))
+		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 -R %s -t %d -c 3.91.1.79 > %s", proto, 10, iperfDownloadOutfile))
 		run(iperfDownloadCmd, "iperf", true, true)
+
+		pingDownOutfile := fmt.Sprintf("%d-%d-down.ping", startTime, count)
+		pingCmd = exec.Command("bash", "-c", fmt.Sprintf("ping -i 1 3.91.1.79 > %s", pingDownOutfile))
 		run(pingCmd, "ping", true, true)
 
 		iperfDownloadCmd.Wait()
