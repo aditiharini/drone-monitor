@@ -62,12 +62,13 @@ func main() {
 	run(interestmapsCmd, "[interestmaps]", true, true)
 	time.Sleep(2 * time.Second)
 
-	iperfCmd := exec.Command("bash", "-c", "iperf3 -s")
+	iperfOutfile := fmt.Sprintf("%d.iperf", time.Now().Unix())
+	iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -s | tee %s", iperfOutfile))
 	run(iperfCmd, "[iperf]", true, true)
 	fmt.Println("Starting iperf")
 	time.Sleep(2 * time.Second)
 
-	outfile := fmt.Sprintf("srv-%d", time.Now().Unix())
+	outfile := fmt.Sprintf("srv-%d.pcap", time.Now().Unix())
 	tcpdumpCmd := exec.Command("bash", "-c", fmt.Sprintf("sudo tcpdump -n -i eth0 -w %s dst port 5201", outfile))
 	utils.RunCmd(tcpdumpCmd, "[tcpdump]", true, true)
 	time.Sleep(2 * time.Second)
