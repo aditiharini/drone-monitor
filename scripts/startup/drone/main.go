@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os/exec"
 	"time"
+
+	"github.com/aditiharini/drone-monitor/scripts/utils"
 )
 
 func run(cmd *exec.Cmd, tag string, printStdout bool, printStderr bool) {
@@ -80,12 +82,17 @@ func main() {
 		proto = ""
 	}
 
+	outfile := fmt.Sprintf("drone-%d.pcap", time.Now().Unix())
+	tcpdumpCmd := exec.Command("bash", "-c", fmt.Sprintf("sudo tcpdump -n -i eth1 -w %s dst port 5201", outfile))
+	utils.RunCmd(tcpdumpCmd, "[tcpdump]", true, true)
+	time.Sleep(2 * time.Second)
+
 	for {
 		fmt.Printf("[iperf] starting")
 
 		// Do upload
 		iperfUploadOutfile := fmt.Sprintf("%d-%d-up.iperf", startTime, count)
-		iperfUploadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 %s -t %d -c 3.91.1.79 > %s", proto, 60, iperfUploadOutfile))
+		iperfUploadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 %s -t %d -c 3.91.1.79 > %s", proto, 180, iperfUploadOutfile))
 		run(iperfUploadCmd, "iperf", true, true)
 
 		pingUpOutfile := fmt.Sprintf("%d-%d-up.ping", startTime, count)
@@ -97,7 +104,7 @@ func main() {
 
 		// Do download
 		iperfDownloadOutfile := fmt.Sprintf("%d-%d-down.iperf", startTime, count)
-		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 -R %s -t %d -c 3.91.1.79 > %s", proto, 60, iperfDownloadOutfile))
+		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 -R %s -t %d -c 3.91.1.79 > %s", proto, 180, iperfDownloadOutfile))
 		run(iperfDownloadCmd, "iperf", true, true)
 
 		pingDownOutfile := fmt.Sprintf("%d-%d-down.ping", startTime, count)
