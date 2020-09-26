@@ -10,19 +10,24 @@ import (
 )
 
 type MahimahiTrace struct {
+	Dirname    string
 	Filename   string
 	PacketSize int
 }
 
-func (m *MahimahiTrace) PrintBandwidth(stdout bool) {
-	file, err := os.Open(m.Filename)
+func (m *MahimahiTrace) PrintBandwidth(outputDir string) {
+	stdout := false
+	if outputDir == "" {
+		stdout = true
+	}
+	file, err := os.Open(fmt.Sprintf("%s/%s", m.Dirname, m.Filename))
 	if err != nil {
 		panic(err)
 	}
 	var tputCsvWriter *csv.Writer
 	if !stdout {
-		tputCsvName := strings.Split(m.Filename, ".")[0] + ".csv"
-		tputCsv, err := os.Create(tputCsvName)
+		tputCsvName := strings.Split(m.Filename, ".")[0]
+		tputCsv, err := os.Create(fmt.Sprintf("%s/%s.csv", outputDir, tputCsvName))
 		if err != nil {
 			panic(err)
 		}

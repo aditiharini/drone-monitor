@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
+	trace "github.com/aditiharini/drone-monitor/scripts/traces"
 	traces "github.com/aditiharini/drone-monitor/scripts/traces"
 )
 
@@ -85,11 +86,12 @@ func (ds DirectoryStructure) create() {
 }
 
 func main() {
-	trace := flag.String("trace", "", "trace to be processed")
+	traceFile := flag.String("trace", "", "trace to be processed")
 	name := flag.String("name", "", "folder to upload to")
+	traceType := flag.String("type", "iperf", "type of trace")
+	isTcp := flag.Bool("tcp", false, "collection used tcp")
 	flag.Parse()
-	allIds := allSenderIds(*trace)
-	uploadDir := fmt.Sprintf("Drone-Project/measurements/saturatr_traces/%s", *name)
+
 	dirStructure := DirectoryStructure{
 		name: "tmp",
 		children: []DirectoryStructure{
@@ -104,19 +106,39 @@ func main() {
 		},
 	}
 	dirStructure.create()
-	for _, id := range allIds {
-		out, err := exec.Command("python", "prep-for-simulation.py", *trace, id).CombinedOutput()
-		if err != nil {
-			print(string(out))
-			panic(err)
+
+	var uploadDir string
+	if *traceType == "saturatr" {
+		allIds := allSenderIds(*traceFile)
+		uploadDir = fmt.Sprintf("Drone-Project/measurements/saturatr_traces/%s", *name)
+		for _, id := range allIds {
+			out, err := exec.Command("python", "prep-for-simulation.py", *traceFile, id).CombinedOutput()
+			if err != nil {
+				print(string(out))
+				panic(err)
+			}
+			move(fmt.Sprintf("uplink-%s.pps", id), "tmp/processed/traces")
+			latencyFile := fmt.Sprintf("tmp/processed/stats/latency-%s.csv", id)
+			throughputFile := fmt.Sprintf("tmp/processed/stats/throughput-%s.csv", id)
+			traces.WriteCsvData(*traceFile, id, latencyFile, throughputFile)
 		}
-		move(fmt.Sprintf("uplink-%s.pps", id), "tmp/processed/traces")
-		latencyFile := fmt.Sprintf("tmp/processed/stats/latency-%s.csv", id)
-		throughputFile := fmt.Sprintf("tmp/processed/stats/throughput-%s.csv", id)
-		traces.WriteCsvData(*trace, id, latencyFile, throughputFile)
+	} else if *traceType == "iperf" {
+		proto := "udp"
+		if *isTcp {
+			proto = "tcp"
+		}
+		processor := trace.PcapProcessor{Filename: *traceFile, OutputDir: "tmp/processed/traces", Filter: proto, CurrentFilenum: 0}
+		processor.ToMahiMahi()
+		for _, file := range processor.MahimahiFiles {
+			mmTrace := trace.MahimahiTrace{Filename: file, Dirname: "tmp/processed/traces", PacketSize: 1500}
+			mmTrace.PrintBandwidth("tmp/processed/stats")
+		}
+
+	} else {
+		panic("invalid trace type")
 	}
 
-	copy(*trace, "tmp/raw")
+	copy(*traceFile, "tmp/raw")
 	if *name != "" {
 		upload("tmp", uploadDir)
 	}

@@ -18,13 +18,15 @@ type PcapProcessor struct {
 	Filter         string
 	CurrentFilenum int
 	MahimahiFiles  []string
+	OutputDir      string
 }
 
 func (p *PcapProcessor) NewMahimahiTrace() *os.File {
 	p.CurrentFilenum++
-	filename := fmt.Sprintf("%s-%d.uplink", "mm", p.CurrentFilenum)
+	filename := fmt.Sprintf("uplink-%d.pps", p.CurrentFilenum)
 	p.MahimahiFiles = append(p.MahimahiFiles, filename)
-	file, err := os.Create(filename)
+	filePath := fmt.Sprintf("%s/%s", p.OutputDir, filename)
+	file, err := os.Create(filePath)
 	if err != nil {
 		panic(err)
 	}
