@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aditiharini/drone-monitor/scripts/utils"
+	"github.com/knq/hilink"
 )
 
 func run(cmd *exec.Cmd, tag string, printStdout bool, printStderr bool) {
@@ -63,15 +64,19 @@ func setupDevices() {
 	// }
 }
 
-func main() {
-	useTcp := flag.Bool("tcp", false, "iperf protocol")
-	flag.Parse()
-
+func ifconfig() {
 	out, err := exec.Command("ifconfig").CombinedOutput()
 	fmt.Println("[ifconfig]", string(out))
 	if err != nil {
 		panic(err)
 	}
+}
+
+func main() {
+	useTcp := flag.Bool("tcp", false, "iperf protocol")
+	flag.Parse()
+
+	ifconfig()
 
 	// Turn saturatr on and off
 	startTime := time.Now().Unix()
@@ -89,6 +94,22 @@ func main() {
 
 	time.Sleep(1 * time.Minute)
 
+	client, err := hilink.NewClient()
+	if err != nil {
+		panic(err)
+	}
+
+	go func() {
+		for {
+			info, err := client.TrafficInfo()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(info)
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
 	for {
 		fmt.Printf("[iperf] starting")
 
@@ -103,6 +124,7 @@ func main() {
 
 		iperfUploadCmd.Wait()
 		pingCmd.Process.Kill()
+		ifconfig()
 
 		// Do download
 		iperfDownloadOutfile := fmt.Sprintf("%d-%d-down.iperf", startTime, count)
@@ -115,6 +137,7 @@ func main() {
 
 		iperfDownloadCmd.Wait()
 		pingCmd.Process.Kill()
+		ifconfig()
 
 		count++
 
