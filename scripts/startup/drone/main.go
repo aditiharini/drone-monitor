@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"os"
 	"os/exec"
 	"time"
 
@@ -87,7 +88,7 @@ func main() {
 		proto = ""
 	}
 
-	outfile := fmt.Sprintf("drone-%d.pcap", time.Now().Unix())
+	outfile := fmt.Sprintf("drone-%d.pcap", startTime)
 	tcpdumpCmd := exec.Command("bash", "-c", fmt.Sprintf("sudo tcpdump -n -i eth1 -w %s dst port 5201", outfile))
 	utils.RunCmd(tcpdumpCmd, "[tcpdump]", true, true)
 	time.Sleep(2 * time.Second)
@@ -99,37 +100,46 @@ func main() {
 		panic(err)
 	}
 
+	logfile, err := os.Create(fmt.Sprintf("drone-%d.hilink", startTime))
+	if err != nil {
+		panic(err)
+	}
+	logWriter := bufio.NewWriter(logfile)
+	defer logWriter.Flush()
+
 	go func() {
 		for {
 			info, err := client.TrafficInfo()
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(info)
+			fmt.Fprintln(logWriter, info)
 			info, err = client.NetworkInfo()
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(info)
+			fmt.Fprintln(logWriter, info)
 
 			info, err = client.SignalInfo()
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(info)
+			fmt.Fprintln(logWriter, info)
 
 			info, err = client.StatusInfo()
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(info)
+			fmt.Fprintln(logWriter, info)
 
 			info, err = client.ModeNetworkInfo()
 			if err != nil {
 				panic(err)
 			}
-			fmt.Println(info)
-			time.Sleep(1 * time.Second)
+			fmt.Fprintln(logWriter, info)
+			logWriter.Flush()
+
+			time.Sleep(2 * time.Second)
 		}
 	}()
 
