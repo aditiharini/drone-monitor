@@ -110,6 +110,7 @@ func main() {
 
 	go func() {
 		for {
+			fmt.Fprintln(logWriter, time.Now().UnixNano())
 			info, err := client.TrafficInfo()
 			if err != nil {
 				panic(err)
