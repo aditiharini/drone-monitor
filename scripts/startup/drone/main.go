@@ -94,7 +94,7 @@ func main() {
 
 	time.Sleep(1 * time.Minute)
 
-	client, err := hilink.NewClient(hilink.URL("http://192.168.0.100"))
+	client, err := hilink.NewClient(hilink.URL("http://192.168.0.1"))
 	if err != nil {
 		panic(err)
 	}
@@ -102,6 +102,11 @@ func main() {
 	go func() {
 		for {
 			info, err := client.TrafficInfo()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(info)
+			info, err = client.NetworkInfo()
 			if err != nil {
 				panic(err)
 			}
