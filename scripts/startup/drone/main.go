@@ -65,8 +65,8 @@ func setupDevices() {
 	// }
 }
 
-func ifconfig() {
-	out, err := exec.Command("ifconfig").CombinedOutput()
+func ifconfig(outfile string) {
+	out, err := exec.Command("bash", "-c", fmt.Sprintf("ifconfig >> %s", outfile)).CombinedOutput()
 	fmt.Println("[ifconfig]", string(out))
 	if err != nil {
 		panic(err)
@@ -77,10 +77,11 @@ func main() {
 	useTcp := flag.Bool("tcp", false, "iperf protocol")
 	flag.Parse()
 
-	ifconfig()
+	startTime := time.Now().Unix()
+	ifconfigOutfile := fmt.Sprintf("%d.ifconfig", startTime)
+	ifconfig(ifconfigOutfile)
 
 	// Turn saturatr on and off
-	startTime := time.Now().Unix()
 	count := 0
 
 	proto := "-u -b 30M"
@@ -157,7 +158,7 @@ func main() {
 
 		iperfUploadCmd.Wait()
 		pingCmd.Process.Kill()
-		ifconfig()
+		ifconfig(ifconfigOutfile)
 
 		// Do download
 		iperfDownloadOutfile := fmt.Sprintf("%d-%d-down.iperf", startTime, count)
@@ -170,7 +171,7 @@ func main() {
 
 		iperfDownloadCmd.Wait()
 		pingCmd.Process.Kill()
-		ifconfig()
+		ifconfig(ifconfigOutfile)
 
 		count++
 
