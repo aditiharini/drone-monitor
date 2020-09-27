@@ -111,6 +111,24 @@ func main() {
 				panic(err)
 			}
 			fmt.Println(info)
+
+			info, err = client.SignalInfo()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(info)
+
+			info, err = client.StatusInfo()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(info)
+
+			info, err = client.ModeNetworkInfo()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(info)
 			time.Sleep(1 * time.Second)
 		}
 	}()
