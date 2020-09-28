@@ -105,7 +105,6 @@ func (s *State) HandleDroneSignal(res http.ResponseWriter, req *http.Request) {
 	if err := json.NewDecoder(req.Body).Decode(&signal); err != nil {
 		fmt.Printf("Problem handling signal post %v\n", err)
 	}
-	fmt.Println(signal)
 	s.mux.Lock()
 	s.Drone.Signal = signal
 	s.mux.Unlock()
