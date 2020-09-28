@@ -130,12 +130,6 @@ func main() {
 				panic(err)
 			}
 			fmt.Fprintln(logWriter, info)
-
-			info, err = client.StatusInfo()
-			if err != nil {
-				panic(err)
-			}
-			fmt.Fprintln(logWriter, info)
 			body, err := json.Marshal(info)
 			if err != nil {
 				panic(err)
@@ -145,6 +139,12 @@ func main() {
 				fmt.Println(err)
 				fmt.Println(res)
 			}
+
+			info, err = client.StatusInfo()
+			if err != nil {
+				panic(err)
+			}
+			fmt.Fprintln(logWriter, info)
 
 			info, err = client.ModeNetworkInfo()
 			if err != nil {
