@@ -11,6 +11,7 @@ import (
 type State struct {
 	Drone struct {
 		Dji      DjiState      `json:"dji"`
+		Signal   Signal        `json:"signal"`
 		Saturatr SaturatrState `json:"saturatr"`
 		Download float64       `json:"download"`
 		Upload   float64       `json:"upload"`
@@ -18,8 +19,7 @@ type State struct {
 	Server struct {
 		Saturatr SaturatrState `json:"saturatr"`
 	} `json:"server"`
-	Signal Signal `json:"signal"`
-	mux    sync.Mutex
+	mux sync.Mutex
 }
 
 type Signal struct {
@@ -107,7 +107,7 @@ func (s *State) HandleDroneSignal(res http.ResponseWriter, req *http.Request) {
 	}
 	fmt.Println(signal)
 	s.mux.Lock()
-	s.Signal = signal
+	s.Drone.Signal = signal
 	s.mux.Unlock()
 }
 

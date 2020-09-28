@@ -79,7 +79,7 @@ class Signal extends Component {
 	return (
 	    <div>
 		<h3>Hilink</h3>
-		<p>rsrp: {this.props.status.rssi} </p>
+		<p>rsrp: {this.props.status.rsrp} </p>
 		<p>rsrq: {this.props.status.rsrq} </p>
 		<p>rssi: {this.props.status.rssi} </p>
 		<p>sinr: {this.props.status.sinr} </p>

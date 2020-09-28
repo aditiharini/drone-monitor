@@ -140,7 +140,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			res, err := http.Post("http://3.91.1.79:8000/drone/signal", "application/json", bytes.NewBuffer(body))
+			res, err := http.Post("http://3.91.1.79:10000/drone/signal", "application/json", bytes.NewBuffer(body))
 			if err != nil {
 				fmt.Println(err)
 				fmt.Println(res)
