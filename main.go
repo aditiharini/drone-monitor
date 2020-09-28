@@ -15,6 +15,7 @@ func main() {
 	router.HandleFunc("/drone/saturatr", state.HandleDroneSaturatr).Methods("POST")
 	router.HandleFunc("/server/saturatr", state.HandleServerSaturatr).Methods("POST")
 	router.HandleFunc("/state", state.HandleGetState).Methods("GET")
+	router.HandleFunc("/drone/signal", state.HandleGetState).Methods("POST")
 	err := http.ListenAndServe(":10000", router)
 	if err != nil {
 		panic(err)

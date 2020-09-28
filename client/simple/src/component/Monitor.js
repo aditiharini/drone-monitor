@@ -31,6 +31,7 @@ class Monitor extends Component {
                     drone : {
                         dji : result.drone.dji,
                         saturatr : result.drone.saturatr,
+			signal: result.drone.signal, 
 			upload : result.drone.upload,
 			download : result.drone.download
                     },
@@ -54,6 +55,7 @@ class Monitor extends Component {
                         <div>
                             <Dji status={this.state.drone.dji}></Dji>
                             <Saturatr status={this.state.drone.saturatr}></Saturatr>
+			    <Signal status={this.state.drone.signal}></Signal>
 			    <p>upload: {this.state.drone.upload} Mbps</p>
 			    <p>download: {this.state.drone.download} Mbps</p>
                         </div>
@@ -71,6 +73,22 @@ class Monitor extends Component {
 }
 
 export default Monitor
+
+class Signal extends Component {
+    render() {
+	return (
+	    <div>
+		<h3>Hilink</h3>
+		<p>rsrp: {this.props.status.rssi} </p>
+		<p>rsrq: {this.props.status.rsrq} </p>
+		<p>rssi: {this.props.status.rssi} </p>
+		<p>sinr: {this.props.status.sinr} </p>
+	    </div>
+
+	)
+    }
+
+}
 
 class Dji extends Component {
     render() {

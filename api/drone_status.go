@@ -18,7 +18,15 @@ type State struct {
 	Server struct {
 		Saturatr SaturatrState `json:"saturatr"`
 	} `json:"server"`
-	mux sync.Mutex
+	Signal Signal `json:"signal"`
+	mux    sync.Mutex
+}
+
+type Signal struct {
+	Rsrp string `json:"rsrp"`
+	Rsrq string `json:"rsrq"`
+	Rssi string `json:"rssi"`
+	Sinr string `json:"sinr"`
 }
 
 type Point [2]float64
@@ -88,6 +96,18 @@ func (s *State) HandleServerSaturatr(res http.ResponseWriter, req *http.Request)
 	s.mux.Lock()
 	s.Drone.Upload = upload
 	s.Server.Saturatr = saturatr
+	s.mux.Unlock()
+}
+
+func (s *State) HandleDroneSignal(res http.ResponseWriter, req *http.Request) {
+	fmt.Println("Post request from drone hilink signal")
+	var signal Signal
+	if err := json.NewDecoder(req.Body).Decode(&signal); err != nil {
+		fmt.Printf("Problem handling signal post %v\n", err)
+	}
+	fmt.Println(signal)
+	s.mux.Lock()
+	s.Signal = signal
 	s.mux.Unlock()
 }
 

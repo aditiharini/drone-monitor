@@ -2,8 +2,11 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/exec"
 	"time"
@@ -133,6 +136,15 @@ func main() {
 				panic(err)
 			}
 			fmt.Fprintln(logWriter, info)
+			body, err := json.Marshal(info)
+			if err != nil {
+				panic(err)
+			}
+			res, err := http.Post("http://3.91.1.79:8000/drone/signal", "application/json", bytes.NewBuffer(body))
+			if err != nil {
+				fmt.Println(err)
+				fmt.Println(res)
+			}
 
 			info, err = client.ModeNetworkInfo()
 			if err != nil {
