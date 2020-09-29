@@ -83,6 +83,7 @@ class Signal extends Component {
 		<p>rsrq: {this.props.status.rsrq} </p>
 		<p>rssi: {this.props.status.rssi} </p>
 		<p>sinr: {this.props.status.sinr} </p>
+		<p>cell_id: {this.props.status.cell_id} </p>
 	    </div>
 
 	)

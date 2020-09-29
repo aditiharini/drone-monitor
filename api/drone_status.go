@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type State struct {
@@ -23,10 +26,11 @@ type State struct {
 }
 
 type Signal struct {
-	Rsrp string `json:"rsrp"`
-	Rsrq string `json:"rsrq"`
-	Rssi string `json:"rssi"`
-	Sinr string `json:"sinr"`
+	Rsrp   string `json:"rsrp"`
+	Rsrq   string `json:"rsrq"`
+	Rssi   string `json:"rssi"`
+	Sinr   string `json:"sinr"`
+	CellId string `json:"cell_id"`
 }
 
 type Point [2]float64
@@ -61,6 +65,7 @@ func (s *State) HandleDji(res http.ResponseWriter, req *http.Request) {
 	if err := json.NewDecoder(req.Body).Decode(&dji); err != nil {
 		fmt.Printf("Problem handling dji post %v\n", err)
 	}
+	log.WithTime(time.Now()).WithFields(log.Fields{"state": s}).Info()
 	s.mux.Lock()
 	s.Drone.Dji = dji
 	s.mux.Unlock()
@@ -105,6 +110,7 @@ func (s *State) HandleDroneSignal(res http.ResponseWriter, req *http.Request) {
 	if err := json.NewDecoder(req.Body).Decode(&signal); err != nil {
 		fmt.Printf("Problem handling signal post %v\n", err)
 	}
+	log.WithTime(time.Now()).WithFields(log.Fields{"state": s}).Info()
 	s.mux.Lock()
 	s.Drone.Signal = signal
 	s.mux.Unlock()
