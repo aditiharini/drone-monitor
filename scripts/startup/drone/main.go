@@ -153,7 +153,7 @@ func main() {
 			fmt.Fprintln(logWriter, info)
 			logWriter.Flush()
 
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 		}
 	}()
 
