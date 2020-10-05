@@ -63,7 +63,6 @@ func (ht *HilinkTrace) ParseChunk(reader *bufio.Scanner) LogChunk {
 	reader.Scan()
 	line := reader.Text()
 	line = line[4 : len(line)-1]
-	fmt.Println(line)
 	pairs := strings.Split(line, " ")
 	for _, pair := range pairs {
 		splitPair := strings.Split(pair, ":")

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -36,7 +37,7 @@ func allSenderIds(filename string) []string {
 }
 
 func upload(from string, to string) {
-	uploadCmd := fmt.Sprintf("/home/ubuntu/dropbox_uploader.sh upload %s %s", from, to)
+	uploadCmd := fmt.Sprintf("dropbox_uploader.sh upload %s %s", from, to)
 	out, err := exec.Command("bash", "-c", uploadCmd).CombinedOutput()
 	if err != nil {
 		print(string(out))
@@ -83,6 +84,13 @@ func (ds DirectoryStructure) create() {
 		child.name = fmt.Sprintf("%s/%s", ds.name, child.name)
 		child.create()
 	}
+}
+
+type TraceMetadata struct {
+	Date    string `json:"date"`
+	Time    string `json:"time"`
+	Weather string `json:"weather"`
+	Notes   string `json:"notes"`
 }
 
 func main() {
@@ -145,6 +153,39 @@ func main() {
 
 	copy(*traceFile, "tmp/raw")
 	if *name != "" {
-		upload("tmp", uploadDir)
+		inputScanner := bufio.NewScanner(os.Stdin)
+		var metadata TraceMetadata
+		fmt.Printf("Date:")
+		inputScanner.Scan()
+		metadata.Date = inputScanner.Text()
+		fmt.Printf("Time:")
+		inputScanner.Scan()
+		metadata.Time = inputScanner.Text()
+		fmt.Printf("Weather:")
+		inputScanner.Scan()
+		metadata.Weather = inputScanner.Text()
+		fmt.Printf("Notes:")
+		inputScanner.Scan()
+		metadata.Notes = inputScanner.Text()
+		fmt.Printf("Finish upload?")
+		inputScanner.Scan()
+		descFile, err := os.Create("tmp/description.json")
+		defer descFile.Close()
+		if err != nil {
+			panic(err)
+		}
+		descBytes, err := json.Marshal(metadata)
+		if err != nil {
+			panic(err)
+		}
+		_, err = descFile.Write(descBytes)
+		if err != nil {
+			panic(err)
+		}
+		if strings.ToLower(inputScanner.Text()) == "y" {
+			upload("tmp", uploadDir)
+		} else {
+			fmt.Println("Aborted")
+		}
 	}
 }
