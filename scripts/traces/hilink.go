@@ -10,8 +10,8 @@ import (
 )
 
 type HilinkTrace struct {
-	Dirname  string
-	Filename string
+	OutputDir string
+	Filename  string
 }
 
 type LogChunk struct {
@@ -55,10 +55,6 @@ func (rs *RawSignal) ToProcessed() Signal {
 	return signal
 }
 
-func (ht *HilinkTrace) Filepath() string {
-	return fmt.Sprintf("%s/%s", ht.Dirname, ht.Filename)
-}
-
 func (ht *HilinkTrace) ParseChunk(reader *bufio.Scanner) LogChunk {
 	timeLine := reader.Text()
 	var rawSignal RawSignal
@@ -80,7 +76,7 @@ func (ht *HilinkTrace) ParseChunk(reader *bufio.Scanner) LogChunk {
 }
 
 func (ht *HilinkTrace) PrintSignalInfo(outputDir string) {
-	tracefile, err := os.Open(ht.Filepath())
+	tracefile, err := os.Open(ht.Filename)
 	if err != nil {
 		panic(err)
 	}

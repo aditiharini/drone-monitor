@@ -123,6 +123,7 @@ func main() {
 			traces.WriteCsvData(*traceFile, id, latencyFile, throughputFile)
 		}
 	} else if *traceType == "iperf" {
+		uploadDir = fmt.Sprintf("Drone-Project/measurements/iperf_traces/%s", *name)
 		proto := "udp"
 		if *isTcp {
 			proto = "tcp"
@@ -134,6 +135,10 @@ func main() {
 			mmTrace.PrintBandwidth("tmp/processed/stats")
 		}
 
+	} else if *traceType == "hilink" {
+		uploadDir = fmt.Sprintf("Drone-Project/measurements/hilink_traces/%s", *name)
+		hilinkTrace := trace.HilinkTrace{Filename: *traceFile, OutputDir: "/tmp/processed/traces"}
+		hilinkTrace.PrintSignalInfo("/tmp/processed/stats")
 	} else {
 		panic("invalid trace type")
 	}
