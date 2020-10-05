@@ -137,8 +137,8 @@ func main() {
 
 	} else if *traceType == "hilink" {
 		uploadDir = fmt.Sprintf("Drone-Project/measurements/hilink_traces/%s", *name)
-		hilinkTrace := trace.HilinkTrace{Filename: *traceFile, OutputDir: "/tmp/processed/traces"}
-		hilinkTrace.PrintSignalInfo("/tmp/processed/stats")
+		hilinkTrace := trace.HilinkTrace{Filepath: *traceFile, OutputDir: "tmp/processed/traces"}
+		hilinkTrace.PrintSignalInfo("tmp/processed/stats")
 	} else {
 		panic("invalid trace type")
 	}

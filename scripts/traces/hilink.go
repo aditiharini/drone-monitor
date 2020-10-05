@@ -11,7 +11,7 @@ import (
 
 type HilinkTrace struct {
 	OutputDir string
-	Filename  string
+	Filepath  string
 }
 
 type LogChunk struct {
@@ -28,12 +28,12 @@ type Signal struct {
 }
 
 type RawSignal struct {
-	time    string
-	rsrp    string
-	rsrq    string
-	rssi    string
-	sinr    string
-	cell_id string
+	Time    string
+	Rsrp    string
+	Rsrq    string
+	Rssi    string
+	Sinr    string
+	Cell_id string
 }
 
 func (ht *HilinkTrace) CsvHeader() []string {
@@ -46,44 +46,59 @@ func (s *Signal) ToCsvRow() []string {
 
 func (rs *RawSignal) ToProcessed() Signal {
 	var signal Signal
-	signal.CellId = rs.cell_id
-	signal.Rsrp = rs.rsrp[:len(rs.rsrp)-3]
-	signal.Rsrq = rs.rsrq[:len(rs.rsrq)-2]
-	signal.Rssi = rs.rssi[:len(rs.rssi)-3]
-	signal.Sinr = rs.sinr[:len(rs.sinr)-2]
-	signal.Time = rs.time
+	signal.CellId = rs.Cell_id
+	signal.Rsrp = rs.Rsrp[:len(rs.Rsrp)-3]
+	signal.Rsrq = rs.Rsrq[:len(rs.Rsrq)-2]
+	signal.Rssi = rs.Rssi[:len(rs.Rssi)-3]
+	signal.Sinr = rs.Sinr[:len(rs.Sinr)-2]
+	signal.Time = rs.Time
 	return signal
 }
 
 func (ht *HilinkTrace) ParseChunk(reader *bufio.Scanner) LogChunk {
 	timeLine := reader.Text()
 	var rawSignal RawSignal
-	for i := 0; i < 5; i++ {
-		line := reader.Text()
-		line = line[4 : len(line)-1]
-		pairs := strings.Split(line, " ")
-		for _, pair := range pairs {
-			splitPair := strings.Split(pair, ":")
-			key, value := splitPair[0], splitPair[1]
-			s := reflect.ValueOf(&rawSignal).Elem()
-			s.FieldByName(key).SetString(value)
+	reader.Scan()
+	reader.Scan()
+	reader.Scan()
+	line := reader.Text()
+	line = line[4 : len(line)-1]
+	fmt.Println(line)
+	pairs := strings.Split(line, " ")
+	for _, pair := range pairs {
+		splitPair := strings.Split(pair, ":")
+		key, value := splitPair[0], splitPair[1]
+		field := reflect.ValueOf(&rawSignal).Elem().FieldByName(strings.Title(key))
+		if field.CanSet() {
+			field.SetString(value)
 		}
 	}
-	rawSignal.time = timeLine
+	reader.Scan()
+	reader.Scan()
+	rawSignal.Time = timeLine
 	var logChunk LogChunk
 	logChunk.Signal = rawSignal.ToProcessed()
 	return logChunk
 }
 
+func (ht *HilinkTrace) Filename() string {
+	sections := strings.Split(ht.Filepath, "/")
+	nameParts := strings.Split(sections[len(sections)-1], ".")
+	return nameParts[0]
+}
+
 func (ht *HilinkTrace) PrintSignalInfo(outputDir string) {
-	tracefile, err := os.Open(ht.Filename)
+	tracefile, err := os.Open(ht.Filepath)
+	defer tracefile.Close()
 	if err != nil {
 		panic(err)
 	}
-
-	outfilePath := fmt.Sprintf("%s/%s", outputDir, ht.Filename)
+	outfilePath := fmt.Sprintf("%s/%s.csv", outputDir, ht.Filename())
+	fmt.Println(outfilePath)
 	outfile, err := os.Create(outfilePath)
+	defer outfile.Close()
 	csvWriter := csv.NewWriter(outfile)
+	defer csvWriter.Flush()
 	csvWriter.Write(ht.CsvHeader())
 	traceReader := bufio.NewScanner(tracefile)
 	for traceReader.Scan() {
