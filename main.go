@@ -24,9 +24,12 @@ func main() {
 	state := api.State{}
 	router.HandleFunc("/drone/flight", state.HandleDji).Methods("POST")
 	router.HandleFunc("/drone/saturatr", state.HandleDroneSaturatr).Methods("POST")
-	router.HandleFunc("/server/saturatr", state.HandleServerSaturatr).Methods("POST")
-	router.HandleFunc("/state", state.HandleGetState).Methods("GET")
 	router.HandleFunc("/drone/signal", state.HandleDroneSignal).Methods("POST")
+	router.HandleFunc("/drone/iperf", state.HandleDroneIperf).Methods("POST")
+	router.HandleFunc("/drone/ping", state.HandleDronePing).Methods("POST")
+	router.HandleFunc("/server/saturatr", state.HandleServerSaturatr).Methods("POST")
+	router.HandleFunc("/server/iperf", state.HandleServerIperf).Methods("POST")
+	router.HandleFunc("/state", state.HandleGetState).Methods("GET")
 	err = http.ListenAndServe(":10000", router)
 	if err != nil {
 		panic(err)

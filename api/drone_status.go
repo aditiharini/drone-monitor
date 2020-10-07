@@ -18,9 +18,12 @@ type State struct {
 		Saturatr SaturatrState `json:"saturatr"`
 		Download float64       `json:"download"`
 		Upload   float64       `json:"upload"`
+		Iperf    IperfState    `json:"iperf"`
+		Ping     PingState     `json:"ping"`
 	} `json:"drone"`
 	Server struct {
 		Saturatr SaturatrState `json:"saturatr"`
+		Iperf    IperfState    `json:"iperf"`
 	} `json:"server"`
 	mux sync.Mutex
 }
@@ -57,6 +60,14 @@ type SaturatrState struct {
 		Sent     int64 `json:"sent"`
 		Received int64 `json:"received"`
 	} `json:"saturatr"`
+}
+
+type IperfState struct {
+	Bandwidth float64 `json:"bandwidth"`
+}
+
+type PingState struct {
+	Latency float64 `json:"latency"`
 }
 
 func (s *State) HandleDji(res http.ResponseWriter, req *http.Request) {
@@ -101,6 +112,42 @@ func (s *State) HandleServerSaturatr(res http.ResponseWriter, req *http.Request)
 	s.mux.Lock()
 	s.Drone.Upload = upload
 	s.Server.Saturatr = saturatr
+	s.mux.Unlock()
+}
+
+func (s *State) HandleDroneIperf(res http.ResponseWriter, req *http.Request) {
+	fmt.Println("Post request from drone iperf")
+	var iperf IperfState
+	if err := json.NewDecoder(req.Body).Decode(&iperf); err != nil {
+		fmt.Printf("Problem handling iperf post %v\n", err)
+	}
+	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
+	s.mux.Lock()
+	s.Drone.Iperf = iperf
+	s.mux.Unlock()
+}
+
+func (s *State) HandleDronePing(res http.ResponseWriter, req *http.Request) {
+	fmt.Println("Post request from drone ping")
+	var ping PingState
+	if err := json.NewDecoder(req.Body).Decode(&ping); err != nil {
+		fmt.Printf("Problem handling ping post %v\n", err)
+	}
+	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
+	s.mux.Lock()
+	s.Drone.Ping = ping
+	s.mux.Unlock()
+}
+
+func (s *State) HandleServerIperf(res http.ResponseWriter, req *http.Request) {
+	fmt.Println("Post request from server iperf")
+	var iperf IperfState
+	if err := json.NewDecoder(req.Body).Decode(&iperf); err != nil {
+		fmt.Printf("Problem handling iperf post %v\n", err)
+	}
+	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
+	s.mux.Lock()
+	s.Server.Iperf = iperf
 	s.mux.Unlock()
 }
 

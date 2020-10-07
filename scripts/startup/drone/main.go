@@ -11,43 +11,13 @@ import (
 	"os/exec"
 	"time"
 
+	trace "github.com/aditiharini/drone-monitor/scripts/traces"
 	"github.com/aditiharini/drone-monitor/scripts/utils"
 	"github.com/knq/hilink"
 )
 
-func run(cmd *exec.Cmd, tag string, printStdout bool, printStderr bool) {
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
-
-	if err := cmd.Start(); err != nil {
-		panic(err)
-	}
-
-	if printStdout {
-		go func() {
-			buf := bufio.NewReader(stdout)
-			for {
-				line, _, err := buf.ReadLine()
-				if err != nil {
-					break
-				}
-				fmt.Println(tag, string(line))
-			}
-		}()
-	}
-
-	if printStderr {
-		go func() {
-			buf := bufio.NewReader(stderr)
-			for {
-				line, _, err := buf.ReadLine()
-				if err != nil {
-					break
-				}
-				fmt.Println(tag, string(line))
-			}
-		}()
-	}
+func print(s string) {
+	fmt.Println(s)
 }
 
 func setupDevices() {
@@ -94,7 +64,7 @@ func main() {
 
 	outfile := fmt.Sprintf("drone-%d.pcap", startTime)
 	tcpdumpCmd := exec.Command("bash", "-c", fmt.Sprintf("sudo tcpdump -n -i eth1 -w %s dst port 5201", outfile))
-	utils.RunCmd(tcpdumpCmd, "[tcpdump]", true, true)
+	utils.RunCmd(tcpdumpCmd, "[tcpdump]", print, print)
 	time.Sleep(2 * time.Second)
 
 	time.Sleep(1 * time.Minute)
@@ -156,6 +126,11 @@ func main() {
 			time.Sleep(1 * time.Second)
 		}
 	}()
+	pingUpOutfile := fmt.Sprintf("%d.ping", startTime)
+	pingCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL ping -i 1 3.91.1.79 | tee %s", pingUpOutfile))
+	utils.RunCmd(pingCmd, "[ping]", func(s string) {
+		trace.PostLatency(s, "http://3.91.1.79:10000/drone/ping")
+	}, print)
 
 	for {
 		fmt.Printf("[iperf] starting")
@@ -163,27 +138,19 @@ func main() {
 		// Do upload
 		iperfUploadOutfile := fmt.Sprintf("%d-%d-up.iperf", startTime, count)
 		iperfUploadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 %s -t %d -c 3.91.1.79 > %s", proto, 180, iperfUploadOutfile))
-		run(iperfUploadCmd, "iperf", true, true)
-
-		pingUpOutfile := fmt.Sprintf("%d-%d-up.ping", startTime, count)
-		pingCmd := exec.Command("bash", "-c", fmt.Sprintf("ping -i 1 3.91.1.79 > %s", pingUpOutfile))
-		run(pingCmd, "ping", true, true)
+		utils.RunCmd(iperfUploadCmd, "[iperf]", print, print)
 
 		iperfUploadCmd.Wait()
-		pingCmd.Process.Kill()
 		ifconfig(ifconfigOutfile)
 
 		// Do download
 		iperfDownloadOutfile := fmt.Sprintf("%d-%d-down.iperf", startTime, count)
-		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 -R %s -t %d -c 3.91.1.79 > %s", proto, 180, iperfDownloadOutfile))
-		run(iperfDownloadCmd, "iperf", true, true)
-
-		pingDownOutfile := fmt.Sprintf("%d-%d-down.ping", startTime, count)
-		pingCmd = exec.Command("bash", "-c", fmt.Sprintf("ping -i 1 3.91.1.79 > %s", pingDownOutfile))
-		run(pingCmd, "ping", true, true)
+		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -R %s -t %d -c 3.91.1.79 | tee %s", proto, 180, iperfDownloadOutfile))
+		utils.RunCmd(iperfDownloadCmd, "[iperf]", func(s string) {
+			trace.PostBandwidth(s, "http://3.91.1.79:10000/drone/iperf")
+		}, print)
 
 		iperfDownloadCmd.Wait()
-		pingCmd.Process.Kill()
 		ifconfig(ifconfigOutfile)
 
 		count++
