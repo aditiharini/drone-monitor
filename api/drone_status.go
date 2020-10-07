@@ -96,7 +96,7 @@ func createSaturatrState(req *http.Request) SaturatrState {
 }
 
 func (s *State) HandleDroneSaturatr(res http.ResponseWriter, req *http.Request) {
-	fmt.Println("Post request from drone saturatr")
+	fmt.Println("Post request from drone saturatr ", req)
 	saturatr := createSaturatrState(req)
 	download := float64(saturatr.Acker.Received-s.Drone.Saturatr.Acker.Received) * 8. * 1400. / 1000000.
 	s.mux.Lock()

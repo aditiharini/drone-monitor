@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
 type PingInfo struct {
-	Latency string `json:"latency"`
+	Latency float64 `json:"latency"`
 }
 
 func PostLatency(output string, endpoint string) {
@@ -18,10 +19,16 @@ func PostLatency(output string, endpoint string) {
 		if strings.Contains(line, "time=") {
 			pieces := strings.Split(line, "time=")
 			timeStr := pieces[1]
-			ms := strings.Split(timeStr, " ")[0]
-			body, err := json.Marshal(PingInfo{ms})
+			msStr := strings.TrimSpace(strings.Split(timeStr, " ")[0])
+			msFloat, err := strconv.ParseFloat(msStr, 32)
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
+				continue
+			}
+			body, err := json.Marshal(PingInfo{msFloat})
+			if err != nil {
+				fmt.Println(err)
+				continue
 			}
 			res, err := http.Post(endpoint, "application/json", bytes.NewBuffer(body))
 			if err != nil {
