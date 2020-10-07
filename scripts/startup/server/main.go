@@ -5,7 +5,6 @@ import (
 	"os/exec"
 	"time"
 
-	trace "github.com/aditiharini/drone-monitor/scripts/traces"
 	"github.com/aditiharini/drone-monitor/scripts/utils"
 )
 
@@ -40,7 +39,7 @@ func main() {
 	iperfOutfile := fmt.Sprintf("%d.iperf", time.Now().Unix())
 	iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -s | tee %s", iperfOutfile))
 	utils.RunCmd(iperfCmd, "[iperf]", func(s string) {
-		trace.PostBandwidth(s, "http://3.91.1.79:10000/server/iperf")
+		utils.PostBandwidth(s, "http://3.91.1.79:10000/server/iperf")
 	}, print)
 	fmt.Println("Starting iperf")
 	time.Sleep(2 * time.Second)

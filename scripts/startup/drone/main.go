@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"time"
 
-	trace "github.com/aditiharini/drone-monitor/scripts/traces"
 	"github.com/aditiharini/drone-monitor/scripts/utils"
 	"github.com/knq/hilink"
 )
@@ -129,7 +128,7 @@ func main() {
 	pingUpOutfile := fmt.Sprintf("%d.ping", startTime)
 	pingCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL ping -i 1 3.91.1.79 | tee %s", pingUpOutfile))
 	utils.RunCmd(pingCmd, "[ping]", func(s string) {
-		trace.PostLatency(s, "http://3.91.1.79:10000/drone/ping")
+		utils.PostLatency(s, "http://3.91.1.79:10000/drone/ping")
 	}, print)
 
 	for {
@@ -147,7 +146,7 @@ func main() {
 		iperfDownloadOutfile := fmt.Sprintf("%d-%d-down.iperf", startTime, count)
 		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -R %s -t %d -c 3.91.1.79 | tee %s", proto, 180, iperfDownloadOutfile))
 		utils.RunCmd(iperfDownloadCmd, "[iperf]", func(s string) {
-			trace.PostBandwidth(s, "http://3.91.1.79:10000/drone/iperf")
+			utils.PostBandwidth(s, "http://3.91.1.79:10000/drone/iperf")
 		}, print)
 
 		iperfDownloadCmd.Wait()
