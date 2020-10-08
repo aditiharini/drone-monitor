@@ -25,8 +25,10 @@ func main() {
 	go func() {
 		// Allow some time for updated information to arrive
 		// If it doesn't clear unupdated state.
-		state.ClearUnupdatedState()
-		time.Sleep(2 * time.Second)
+		for {
+			state.ClearUnupdatedState()
+			time.Sleep(2 * time.Second)
+		}
 	}()
 	router.HandleFunc("/drone/flight", state.HandleDji).Methods("POST")
 	router.HandleFunc("/drone/saturatr", state.HandleDroneSaturatr).Methods("POST")

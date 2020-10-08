@@ -77,19 +77,24 @@ type PingState struct {
 
 func (s *State) ClearUnupdatedState() {
 	s.mux.Lock()
+	fmt.Println("time since drone iperf", time.Since(s.Drone.Iperf.LastUpdated))
 	if time.Since(s.Drone.Iperf.LastUpdated) > 3*time.Second {
 		s.Drone.Iperf.Bandwidth = -1
+		s.Drone.Download = -1
 		s.Drone.Iperf.LastUpdated = time.Now()
 	}
+	fmt.Println("time since server iperf", time.Since(s.Server.Iperf.LastUpdated))
 	if time.Since(s.Server.Iperf.LastUpdated) > 3*time.Second {
-		s.Drone.Iperf.Bandwidth = -1
+		s.Server.Iperf.Bandwidth = -1
+		s.Drone.Download = -1
 		s.Server.Iperf.LastUpdated = time.Now()
 	}
+	fmt.Println("time since ping", time.Since(s.Drone.Ping.LastUpdated))
 	if time.Since(s.Drone.Ping.LastUpdated) > 3*time.Second {
 		s.Drone.Ping.Latency = -1
 		s.Drone.Ping.LastUpdated = time.Now()
 	}
-
+	fmt.Println("time since singal", time.Since(s.Drone.Signal.LastUpdated))
 	if time.Since(s.Drone.Signal.LastUpdated) > 3*time.Second {
 		s.Drone.Signal.Rsrp = "-1"
 		s.Drone.Signal.Rsrq = "-1"
@@ -153,9 +158,9 @@ func (s *State) HandleDroneIperf(res http.ResponseWriter, req *http.Request) {
 		fmt.Printf("Problem handling iperf post %v\n", err)
 	}
 	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
+	iperf.LastUpdated = time.Now()
 	s.mux.Lock()
 	s.Drone.Iperf = iperf
-	s.Drone.Iperf.LastUpdated = time.Now()
 	if iperf.Direction == "download" {
 		s.Drone.Download = iperf.Bandwidth
 	}
@@ -169,6 +174,7 @@ func (s *State) HandleDronePing(res http.ResponseWriter, req *http.Request) {
 		fmt.Printf("Problem handling ping post %v\n", err)
 	}
 	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
+	ping.LastUpdated = time.Now()
 	s.mux.Lock()
 	s.Drone.Ping = ping
 	s.mux.Unlock()
@@ -181,9 +187,9 @@ func (s *State) HandleServerIperf(res http.ResponseWriter, req *http.Request) {
 		fmt.Printf("Problem handling iperf post %v\n", err)
 	}
 	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
+	iperf.LastUpdated = time.Now()
 	s.mux.Lock()
 	s.Server.Iperf = iperf
-	s.Server.Iperf.LastUpdated = time.Now()
 	if iperf.Direction == "download" {
 		s.Drone.Upload = iperf.Bandwidth
 	}
@@ -197,6 +203,7 @@ func (s *State) HandleDroneSignal(res http.ResponseWriter, req *http.Request) {
 		fmt.Printf("Problem handling signal post %v\n", err)
 	}
 	log.WithTime(time.Now()).WithFields(log.Fields{"state": s}).Info()
+	signal.LastUpdated = time.Now()
 	s.mux.Lock()
 	s.Drone.Signal = signal
 	s.mux.Unlock()
