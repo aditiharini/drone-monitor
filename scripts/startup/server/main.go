@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"os/exec"
 	"time"
 
@@ -36,10 +37,12 @@ func main() {
 		panic(err)
 	}
 
+	httpClient := http.Client{Timeout: time.Second * 1}
+
 	iperfOutfile := fmt.Sprintf("%d.iperf", time.Now().Unix())
 	iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -s | tee %s", iperfOutfile))
 	utils.RunCmd(iperfCmd, "[iperf]", func(s string) {
-		utils.PostBandwidth(s, "http://3.91.1.79:10000/server/iperf")
+		utils.PostBandwidth(s, httpClient, "http://3.91.1.79:10000/server/iperf")
 	}, print)
 	fmt.Println("Starting iperf")
 	time.Sleep(2 * time.Second)

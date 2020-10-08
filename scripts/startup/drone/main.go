@@ -80,6 +80,7 @@ func main() {
 	logWriter := bufio.NewWriter(logfile)
 	defer logWriter.Flush()
 
+	httpClient := http.Client{Timeout: 1 * time.Second}
 	go func() {
 		for {
 			fmt.Fprintln(logWriter, time.Now().UnixNano())
@@ -103,7 +104,7 @@ func main() {
 			if err != nil {
 				panic(err)
 			}
-			res, err := http.Post("http://3.91.1.79:10000/drone/signal", "application/json", bytes.NewBuffer(body))
+			res, err := httpClient.Post("http://3.91.1.79:10000/drone/signal", "application/json", bytes.NewBuffer(body))
 			if err != nil {
 				fmt.Println(err)
 				fmt.Println(res)
@@ -128,7 +129,7 @@ func main() {
 	pingUpOutfile := fmt.Sprintf("%d.ping", startTime)
 	pingCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL ping -i 1 3.91.1.79 | tee %s", pingUpOutfile))
 	utils.RunCmd(pingCmd, "[ping]", func(s string) {
-		utils.PostLatency(s, "http://3.91.1.79:10000/drone/ping")
+		utils.PostLatency(s, httpClient, "http://3.91.1.79:10000/drone/ping")
 	}, print)
 
 	for {
@@ -146,7 +147,7 @@ func main() {
 		iperfDownloadOutfile := fmt.Sprintf("%d-%d-down.iperf", startTime, count)
 		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -R %s -t %d -c 3.91.1.79 | tee %s", proto, 180, iperfDownloadOutfile))
 		utils.RunCmd(iperfDownloadCmd, "[iperf]", func(s string) {
-			utils.PostBandwidth(s, "http://3.91.1.79:10000/drone/iperf")
+			utils.PostBandwidth(s, httpClient, "http://3.91.1.79:10000/drone/iperf")
 		}, print)
 
 		iperfDownloadCmd.Wait()

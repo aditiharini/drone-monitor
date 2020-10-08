@@ -64,6 +64,7 @@ type SaturatrState struct {
 
 type IperfState struct {
 	Bandwidth float64 `json:"bandwidth"`
+	Unit      string  `json:"unit"`
 }
 
 type PingState struct {

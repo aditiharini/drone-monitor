@@ -10,3 +10,4 @@ scripts/upload/iperf/iperf
 *.uplink
 *.iperf
 *.tshark
+*.log
