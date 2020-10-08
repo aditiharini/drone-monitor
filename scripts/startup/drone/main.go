@@ -86,23 +86,23 @@ func main() {
 			fmt.Fprintln(logWriter, time.Now().UnixNano())
 			info, err := client.TrafficInfo()
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 			fmt.Fprintln(logWriter, info)
 			info, err = client.NetworkInfo()
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 			fmt.Fprintln(logWriter, info)
 
 			info, err = client.SignalInfo()
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 			fmt.Fprintln(logWriter, info)
 			body, err := json.Marshal(info)
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 			res, err := httpClient.Post("http://3.91.1.79:10000/drone/signal", "application/json", bytes.NewBuffer(body))
 			if err != nil {
@@ -112,13 +112,13 @@ func main() {
 
 			info, err = client.StatusInfo()
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 			fmt.Fprintln(logWriter, info)
 
 			info, err = client.ModeNetworkInfo()
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 			fmt.Fprintln(logWriter, info)
 			logWriter.Flush()

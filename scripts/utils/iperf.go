@@ -23,7 +23,7 @@ func PostBandwidth(output string, direction string, httpClient http.Client, endp
 			pieces := strings.Split(strings.TrimSpace(line), "  ")
 			fmt.Println(line)
 			fmt.Println(pieces)
-			bandwidthParts := strings.Split(pieces[5], " ")
+			bandwidthParts := strings.Split(pieces[len(pieces)-1], " ")
 			mbpsStr := strings.TrimSpace(bandwidthParts[0])
 			unit := strings.TrimSpace(bandwidthParts[1])
 			mbpsFloat, err := strconv.ParseFloat(mbpsStr, 32)
