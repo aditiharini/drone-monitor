@@ -29,11 +29,12 @@ type State struct {
 }
 
 type Signal struct {
-	Rsrp   string `json:"rsrp"`
-	Rsrq   string `json:"rsrq"`
-	Rssi   string `json:"rssi"`
-	Sinr   string `json:"sinr"`
-	CellId string `json:"cell_id"`
+	Rsrp        string `json:"rsrp"`
+	Rsrq        string `json:"rsrq"`
+	Rssi        string `json:"rssi"`
+	Sinr        string `json:"sinr"`
+	CellId      string `json:"cell_id"`
+	LastUpdated time.Time
 }
 
 type Point [2]float64
@@ -63,13 +64,41 @@ type SaturatrState struct {
 }
 
 type IperfState struct {
-	Bandwidth float64 `json:"bandwidth"`
-	Unit      string  `json:"unit"`
-	Direction string  `json:"direction"`
+	Bandwidth   float64 `json:"bandwidth"`
+	Unit        string  `json:"unit"`
+	Direction   string  `json:"direction"`
+	LastUpdated time.Time
 }
 
 type PingState struct {
-	Latency float64 `json:"latency"`
+	Latency     float64 `json:"latency"`
+	LastUpdated time.Time
+}
+
+func (s *State) ClearUnupdatedState() {
+	s.mux.Lock()
+	if time.Since(s.Drone.Iperf.LastUpdated) > 3*time.Second {
+		s.Drone.Iperf.Bandwidth = -1
+		s.Drone.Iperf.LastUpdated = time.Now()
+	}
+	if time.Since(s.Server.Iperf.LastUpdated) > 3*time.Second {
+		s.Drone.Iperf.Bandwidth = -1
+		s.Server.Iperf.LastUpdated = time.Now()
+	}
+	if time.Since(s.Drone.Ping.LastUpdated) > 3*time.Second {
+		s.Drone.Ping.Latency = -1
+		s.Drone.Ping.LastUpdated = time.Now()
+	}
+
+	if time.Since(s.Drone.Signal.LastUpdated) > 3*time.Second {
+		s.Drone.Signal.Rsrp = "-1"
+		s.Drone.Signal.Rsrq = "-1"
+		s.Drone.Signal.Rssi = "-1"
+		s.Drone.Signal.Sinr = "-1"
+		s.Drone.Signal.CellId = "-1"
+		s.Drone.Signal.LastUpdated = time.Now()
+	}
+	s.mux.Unlock()
 }
 
 func (s *State) HandleDji(res http.ResponseWriter, req *http.Request) {
@@ -126,6 +155,7 @@ func (s *State) HandleDroneIperf(res http.ResponseWriter, req *http.Request) {
 	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
 	s.mux.Lock()
 	s.Drone.Iperf = iperf
+	s.Drone.Iperf.LastUpdated = time.Now()
 	if iperf.Direction == "download" {
 		s.Drone.Download = iperf.Bandwidth
 	}
@@ -153,6 +183,7 @@ func (s *State) HandleServerIperf(res http.ResponseWriter, req *http.Request) {
 	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
 	s.mux.Lock()
 	s.Server.Iperf = iperf
+	s.Server.Iperf.LastUpdated = time.Now()
 	if iperf.Direction == "download" {
 		s.Drone.Upload = iperf.Bandwidth
 	}
