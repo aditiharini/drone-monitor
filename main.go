@@ -22,12 +22,13 @@ func main() {
 	log.SetOutput(logWriter)
 	router := mux.NewRouter().StrictSlash(true)
 	state := api.State{}
+	state.Initialize()
 	go func() {
 		// Allow some time for updated information to arrive
 		// If it doesn't clear unupdated state.
 		for {
 			state.ClearUnupdatedState()
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 		}
 	}()
 	router.HandleFunc("/drone/flight", state.HandleDji).Methods("POST")
