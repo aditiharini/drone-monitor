@@ -65,6 +65,7 @@ type SaturatrState struct {
 type IperfState struct {
 	Bandwidth float64 `json:"bandwidth"`
 	Unit      string  `json:"unit"`
+	Direction string  `json:"direction"`
 }
 
 type PingState struct {
@@ -125,6 +126,9 @@ func (s *State) HandleDroneIperf(res http.ResponseWriter, req *http.Request) {
 	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
 	s.mux.Lock()
 	s.Drone.Iperf = iperf
+	if iperf.Direction == "download" {
+		s.Drone.Download = iperf.Bandwidth
+	}
 	s.mux.Unlock()
 }
 
@@ -149,6 +153,9 @@ func (s *State) HandleServerIperf(res http.ResponseWriter, req *http.Request) {
 	log.WithTime(time.Now()).WithFields(log.Fields{"state": s})
 	s.mux.Lock()
 	s.Server.Iperf = iperf
+	if iperf.Direction == "download" {
+		s.Drone.Upload = iperf.Bandwidth
+	}
 	s.mux.Unlock()
 }
 

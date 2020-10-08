@@ -12,14 +12,15 @@ import (
 type IperfInfo struct {
 	Bandwidth float64 `json:"bandwidth"`
 	Unit      string  `json:"unit"`
+	Direction string  `json:"direction"`
 }
 
 // For realtime print statements
-func PostBandwidth(output string, httpClient http.Client, endpoint string) {
+func PostBandwidth(output string, direction string, httpClient http.Client, endpoint string) {
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
 		if strings.Contains(line, "sec") {
-			pieces := strings.Split(line, "  ")
+			pieces := strings.Split(strings.TrimSpace(line), "  ")
 			fmt.Println(line)
 			fmt.Println(pieces)
 			bandwidthParts := strings.Split(pieces[5], " ")
@@ -30,8 +31,14 @@ func PostBandwidth(output string, httpClient http.Client, endpoint string) {
 				fmt.Println(err)
 				continue
 			}
-			fmt.Println("Iperf info: ", mbpsFloat)
-			body, err := json.Marshal(IperfInfo{Bandwidth: mbpsFloat, Unit: unit})
+			if direction == "both" {
+				if len(pieces) > 6 {
+					direction = "upload"
+				} else {
+					direction = "download"
+				}
+			}
+			body, err := json.Marshal(IperfInfo{Bandwidth: mbpsFloat, Unit: unit, Direction: direction})
 			if err != nil {
 				fmt.Println(err)
 				continue

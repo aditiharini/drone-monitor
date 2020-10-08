@@ -11,3 +11,4 @@ scripts/upload/iperf/iperf
 *.iperf
 *.tshark
 *.log
+*.swp

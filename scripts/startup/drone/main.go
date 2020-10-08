@@ -147,7 +147,7 @@ func main() {
 		iperfDownloadOutfile := fmt.Sprintf("%d-%d-down.iperf", startTime, count)
 		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -R %s -t %d -c 3.91.1.79 | tee %s", proto, 180, iperfDownloadOutfile))
 		utils.RunCmd(iperfDownloadCmd, "[iperf]", func(s string) {
-			utils.PostBandwidth(s, httpClient, "http://3.91.1.79:10000/drone/iperf")
+			utils.PostBandwidth(s, "download", httpClient, "http://3.91.1.79:10000/drone/iperf")
 		}, print)
 
 		iperfDownloadCmd.Wait()
