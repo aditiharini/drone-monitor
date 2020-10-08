@@ -50,7 +50,7 @@ func main() {
 	flag.Parse()
 
 	startTime := time.Now().Unix()
-	ifconfigOutfile := fmt.Sprintf("%d.ifconfig", startTime)
+	ifconfigOutfile := fmt.Sprintf("drone-%d.ifconfig", startTime)
 	ifconfig(ifconfigOutfile)
 
 	// Turn saturatr on and off
@@ -126,7 +126,7 @@ func main() {
 			time.Sleep(1 * time.Second)
 		}
 	}()
-	pingUpOutfile := fmt.Sprintf("%d.ping", startTime)
+	pingUpOutfile := fmt.Sprintf("drone-%d.ping", startTime)
 	pingCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL ping -i 1 3.91.1.79 | tee %s", pingUpOutfile))
 	utils.RunCmd(pingCmd, "[ping]", func(s string) {
 		utils.PostLatency(s, httpClient, "http://3.91.1.79:10000/drone/ping")
@@ -136,7 +136,7 @@ func main() {
 		fmt.Printf("[iperf] starting")
 
 		// Do upload
-		iperfUploadOutfile := fmt.Sprintf("%d-%d-up.iperf", startTime, count)
+		iperfUploadOutfile := fmt.Sprintf("drone-%d-%d-up.iperf", startTime, count)
 		iperfUploadCmd := exec.Command("bash", "-c", fmt.Sprintf("iperf3 %s -t %d -c 3.91.1.79 > %s", proto, 180, iperfUploadOutfile))
 		utils.RunCmd(iperfUploadCmd, "[iperf]", print, print)
 
@@ -144,7 +144,7 @@ func main() {
 		ifconfig(ifconfigOutfile)
 
 		// Do download
-		iperfDownloadOutfile := fmt.Sprintf("%d-%d-down.iperf", startTime, count)
+		iperfDownloadOutfile := fmt.Sprintf("drone-%d-%d-down.iperf", startTime, count)
 		iperfDownloadCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -R %s -t %d -c 3.91.1.79 | tee %s", proto, 180, iperfDownloadOutfile))
 		utils.RunCmd(iperfDownloadCmd, "[iperf]", func(s string) {
 			utils.PostBandwidth(s, "download", httpClient, "http://3.91.1.79:10000/drone/iperf")

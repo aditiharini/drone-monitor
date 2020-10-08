@@ -39,7 +39,7 @@ func main() {
 
 	httpClient := http.Client{Timeout: time.Second * 1}
 
-	iperfOutfile := fmt.Sprintf("%d.iperf", time.Now().Unix())
+	iperfOutfile := fmt.Sprintf("srv-%d.iperf", time.Now().Unix())
 	iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -s | tee %s", iperfOutfile))
 	utils.RunCmd(iperfCmd, "[iperf]", func(s string) {
 		utils.PostBandwidth(s, "both", httpClient, "http://3.91.1.79:10000/server/iperf")
