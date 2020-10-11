@@ -93,7 +93,6 @@ func (ht *HilinkTrace) PrintSignalInfo(outputDir string) {
 		panic(err)
 	}
 	outfilePath := fmt.Sprintf("%s/%s.csv", outputDir, ht.Filename())
-	fmt.Println(outfilePath)
 	outfile, err := os.Create(outfilePath)
 	defer outfile.Close()
 	csvWriter := csv.NewWriter(outfile)

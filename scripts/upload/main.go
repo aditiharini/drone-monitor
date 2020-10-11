@@ -147,6 +147,10 @@ func main() {
 		uploadDir = fmt.Sprintf("Drone-Project/measurements/hilink_traces/%s", *name)
 		hilinkTrace := trace.HilinkTrace{Filepath: *traceFile, OutputDir: "tmp/processed/traces"}
 		hilinkTrace.PrintSignalInfo("tmp/processed/stats")
+	} else if *traceType == "combined" {
+		uploadDir = fmt.Sprintf("Drone-Project/measurements/combined_traces/%s", *name)
+		combinedTrace := trace.CombinedTrace{Filepath: *traceFile, OutputDir: "tmp/processed/traces"}
+		combinedTrace.PrintCombinedInfo("tmp/processed/stats")
 	} else {
 		panic("invalid trace type")
 	}
