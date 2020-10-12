@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -18,20 +17,49 @@ type CombinedTrace struct {
 	Filepath  string
 }
 
+type MicroTime struct {
+	time.Time
+}
+
 type LogLine struct {
-	Time  time.Time `json:"time"`
+	Time  MicroTime `json:"time"`
 	State api.State `json:"state"`
 }
 
+func (mt *MicroTime) UnmarshalJSON(buf []byte) error {
+	parsedTime, err := time.Parse(time.StampMicro, strings.Trim(string(buf), `"`))
+	if err != nil {
+		return err
+	}
+	mt.Time = parsedTime
+	return nil
+}
+
 func (ll *LogLine) ToCsvRow() []string {
-	timeStr := strconv.FormatInt(ll.Time.Unix(), 10)
+	timeStr := fmt.Sprintf("%d", ll.Time.UTC().Unix())
+	latitude := fmt.Sprintf("%f", ll.State.Drone.Dji.GPS[0])
+	if ll.State.Drone.Dji.GPS[0] == 0 {
+		latitude = "NA"
+	}
+	longitude := fmt.Sprintf("%f", ll.State.Drone.Dji.GPS[1])
+	if ll.State.Drone.Dji.GPS[1] == 0 {
+		longitude = "NA"
+	}
+	altitude := fmt.Sprintf("%f", ll.State.Drone.Dji.GPS[2])
+	if ll.State.Drone.Dji.GPS[1] == 0 && ll.State.Drone.Dji.GPS[0] == 0 {
+		altitude = "NA"
+	}
 	rsrp := ll.State.Drone.Signal.Rsrp
 	if rsrp == "-1" {
 		rsrp = "NA"
+	} else {
+		rsrp = rsrp[:len(rsrp)-3]
 	}
 	rsrq := ll.State.Drone.Signal.Rsrq
 	if rsrq == "-1" {
 		rsrq = "NA"
+	} else {
+		rsrq = rsrq[:len(rsrq)-2]
 	}
 	rssi := ll.State.Drone.Signal.Rssi
 	if rssi == "-1" {
@@ -41,11 +69,14 @@ func (ll *LogLine) ToCsvRow() []string {
 	if sinr == "-1" {
 		sinr = "NA"
 	}
+	cellId := ll.State.Drone.Signal.CellId
+	if cellId == "-1" {
+		cellId = "NA"
+	}
 	uplinkBandwidth := fmt.Sprintf("%f", ll.State.Server.Iperf.Bandwidth)
 	if ll.State.Server.Iperf.Bandwidth == -1 {
 		uplinkBandwidth = "NA"
 	}
-
 	downlinkBandwidth := fmt.Sprintf("%f", ll.State.Drone.Iperf.Bandwidth)
 	if ll.State.Drone.Iperf.Bandwidth == -1 {
 		downlinkBandwidth = "NA"
@@ -55,11 +86,11 @@ func (ll *LogLine) ToCsvRow() []string {
 		latency = "NA"
 	}
 	// TODO(aditi): change bw and latency to be parsed as strings
-	return []string{timeStr, rsrp, rsrq, rssi, sinr, uplinkBandwidth, downlinkBandwidth, latency}
+	return []string{timeStr, latitude, longitude, altitude, rsrp, rsrq, rssi, sinr, cellId, uplinkBandwidth, downlinkBandwidth, latency}
 }
 
-func (ct *CombinedTrace) CsvHeadders() []string {
-	return []string{"time", "rsrp", "rsrq", "rssi", "sinr", "uplinkBw", "downlinkBw", "latency"}
+func (ct *CombinedTrace) CsvHeaders() []string {
+	return []string{"time", "latitude", "longitude", "altitude", "rsrp", "rsrq", "rssi", "sinr", "cellId", "uplinkBw", "downlinkBw", "latency"}
 }
 
 func (ct *CombinedTrace) Filename() string {
@@ -80,11 +111,14 @@ func (ct *CombinedTrace) PrintCombinedInfo(outputDir string) {
 
 	csvWriter := csv.NewWriter(outfile)
 	defer csvWriter.Flush()
+	csvWriter.Write(ct.CsvHeaders())
 	var state LogLine
 	traceScanner := bufio.NewScanner(tracefile)
 	for traceScanner.Scan() {
 		lineBytes := traceScanner.Bytes()
-		json.Unmarshal(lineBytes, state)
+		if err := json.Unmarshal(lineBytes, &state); err != nil {
+			panic(err)
+		}
 		csvRow := state.ToCsvRow()
 		csvWriter.Write(csvRow)
 	}
