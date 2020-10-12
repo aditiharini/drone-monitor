@@ -27,7 +27,7 @@ type LogLine struct {
 }
 
 func (mt *MicroTime) UnmarshalJSON(buf []byte) error {
-	parsedTime, err := time.Parse(time.StampMicro, strings.Trim(string(buf), `"`))
+	parsedTime, err := time.ParseInLocation(time.StampMicro, strings.Trim(string(buf), `"`), time.Now().Location())
 	if err != nil {
 		return err
 	}
@@ -35,8 +35,9 @@ func (mt *MicroTime) UnmarshalJSON(buf []byte) error {
 	return nil
 }
 
-func (ll *LogLine) ToCsvRow() []string {
-	timeStr := fmt.Sprintf("%d", ll.Time.UTC().Unix())
+func (ll *LogLine) ToCsvRow(baseTime time.Time) []string {
+	offsetTime := ll.Time.Sub(baseTime)
+	timeStr := fmt.Sprintf("%f", offsetTime.Seconds())
 	latitude := fmt.Sprintf("%f", ll.State.Drone.Dji.GPS[0])
 	if ll.State.Drone.Dji.GPS[0] == 0 {
 		latitude = "NA"
@@ -114,12 +115,16 @@ func (ct *CombinedTrace) PrintCombinedInfo(outputDir string) {
 	csvWriter.Write(ct.CsvHeaders())
 	var state LogLine
 	traceScanner := bufio.NewScanner(tracefile)
+	firstTime := time.Unix(0, 0)
 	for traceScanner.Scan() {
 		lineBytes := traceScanner.Bytes()
 		if err := json.Unmarshal(lineBytes, &state); err != nil {
 			panic(err)
 		}
-		csvRow := state.ToCsvRow()
+		if firstTime.Unix() == 0 {
+			firstTime = state.Time.Time
+		}
+		csvRow := state.ToCsvRow(firstTime)
 		csvWriter.Write(csvRow)
 	}
 }
