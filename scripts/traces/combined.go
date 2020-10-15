@@ -77,6 +77,8 @@ func (ll *LogLine) ToCsvRow(baseTime time.Time) []string {
 	uplinkBandwidth := fmt.Sprintf("%f", ll.State.Server.Iperf.Bandwidth)
 	if ll.State.Server.Iperf.Bandwidth == -1 {
 		uplinkBandwidth = "NA"
+	} else if ll.State.Server.Iperf.Unit == "Kbits/sec" {
+		uplinkBandwidth = fmt.Sprintf("%f", ll.State.Server.Iperf.Bandwidth/1000)
 	}
 	downlinkBandwidth := fmt.Sprintf("%f", ll.State.Drone.Iperf.Bandwidth)
 	if ll.State.Drone.Iperf.Bandwidth == -1 {
