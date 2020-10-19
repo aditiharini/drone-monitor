@@ -93,11 +93,99 @@ type TraceMetadata struct {
 	Notes   string `json:"notes"`
 }
 
+type UploadBatch struct {
+	Pcap     string        `json:"pcap"`
+	Iperf    string        `json:"iperf"`
+	Combined string        `json:"combined"`
+	Metadata TraceMetadata `json:"metadata"`
+}
+
+type Batchfile = map[string]UploadBatch
+
+func preparePcapUpload(batchName string, traceFile string, isTcp bool) string {
+	uploadDir := fmt.Sprintf("Drone-Project/measurements/iperf_traces/%s", batchName)
+	proto := "udp"
+	if isTcp {
+		proto = "tcp"
+	}
+	processor := trace.PcapProcessor{Filename: traceFile, OutputDir: "tmp/processed/traces", Filter: proto, CurrentFilenum: 0}
+	processor.ToMahiMahi()
+	for _, file := range processor.MahimahiFiles {
+		mmTrace := trace.MahimahiTrace{Filename: file, Dirname: "tmp/processed/traces", PacketSize: 1500}
+		mmTrace.PrintBandwidth("tmp/processed/stats")
+	}
+	return uploadDir
+}
+
+func prepareCombinedUpload(batchName string, traceFile string) string {
+	uploadDir := fmt.Sprintf("Drone-Project/measurements/combined_traces/%s", batchName)
+	combinedTrace := trace.CombinedTrace{Filepath: traceFile, OutputDir: "tmp/processed/traces"}
+	combinedTrace.PrintCombinedInfo("tmp/processed/stats")
+	return uploadDir
+}
+
+func prepareMetadataUpload(batchName string, metadata TraceMetadata) string {
+	metadataBytes, err := json.Marshal(metadata)
+	if err != nil {
+		panic(err)
+	}
+	metadataFile, err := os.Create(fmt.Sprintf("tmp/raw/description.json"))
+	if err != nil {
+		panic(err)
+	}
+	defer metadataFile.Close()
+	_, err = metadataFile.Write(metadataBytes)
+	if err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("Drone-Project/measurements/metadata/%s", batchName)
+}
+
+func executeBatchfile(filename string) {
+	rawBatchfile, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	defer rawBatchfile.Close()
+
+	var batchfile Batchfile
+	batchfileBytes := make([]byte, 5000)
+	_, err = rawBatchfile.Read(batchfileBytes)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(batchfileBytes, &batchfile)
+	if err != nil {
+		panic(err)
+	}
+
+	for name, info := range batchfile {
+		if info.Combined != "" {
+			uploadDir := prepareCombinedUpload(name, info.Combined)
+			copy(info.Combined, "tmp/raw")
+			upload("tmp", uploadDir)
+		}
+		if info.Pcap != "" {
+			uploadDir := prepareCombinedUpload(name, info.Combined)
+			copy(info.Pcap, "tmp/raw")
+			if info.Iperf != "" {
+				copy(info.Iperf, "tmp/raw")
+			}
+			upload("tmp", uploadDir)
+		}
+		uploadDir := prepareMetadataUpload(name, info.Metadata)
+		upload("tmp", uploadDir)
+	}
+
+}
+
 func main() {
 	traceFile := flag.String("trace", "", "trace to be processed")
 	name := flag.String("name", "", "folder to upload to")
 	traceType := flag.String("type", "iperf", "type of trace")
-	isTcp := flag.Bool("tcp", false, "collection used tcp")
+	isTcp := flag.Bool("tcp", true, "collection used tcp")
+	batchFile := flag.String("batchfile", "", "batch to be processed")
 	flag.Parse()
 
 	dirStructure := DirectoryStructure{
@@ -131,26 +219,19 @@ func main() {
 			traces.WriteCsvData(*traceFile, id, latencyFile, throughputFile)
 		}
 	} else if *traceType == "iperf" {
-		uploadDir = fmt.Sprintf("Drone-Project/measurements/iperf_traces/%s", *name)
-		proto := "udp"
-		if *isTcp {
-			proto = "tcp"
-		}
-		processor := trace.PcapProcessor{Filename: *traceFile, OutputDir: "tmp/processed/traces", Filter: proto, CurrentFilenum: 0}
-		processor.ToMahiMahi()
-		for _, file := range processor.MahimahiFiles {
-			mmTrace := trace.MahimahiTrace{Filename: file, Dirname: "tmp/processed/traces", PacketSize: 1500}
-			mmTrace.PrintBandwidth("tmp/processed/stats")
-		}
+		uploadDir = preparePcapUpload(*name, *traceFile, *isTcp)
 
 	} else if *traceType == "hilink" {
 		uploadDir = fmt.Sprintf("Drone-Project/measurements/hilink_traces/%s", *name)
 		hilinkTrace := trace.HilinkTrace{Filepath: *traceFile, OutputDir: "tmp/processed/traces"}
 		hilinkTrace.PrintSignalInfo("tmp/processed/stats")
 	} else if *traceType == "combined" {
-		uploadDir = fmt.Sprintf("Drone-Project/measurements/combined_traces/%s", *name)
-		combinedTrace := trace.CombinedTrace{Filepath: *traceFile, OutputDir: "tmp/processed/traces"}
-		combinedTrace.PrintCombinedInfo("tmp/processed/stats")
+		uploadDir = prepareCombinedUpload(*name, *traceFile)
+	} else if *traceType == "batch" {
+		if *batchFile == "" {
+			panic("Need to provice batch file as argument")
+		}
+		executeBatchfile(*batchFile)
 	} else {
 		panic("invalid trace type")
 	}
