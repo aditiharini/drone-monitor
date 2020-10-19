@@ -94,6 +94,7 @@ type TraceMetadata struct {
 }
 
 type UploadBatch struct {
+	Dir      string        `json:"dir"`
 	Pcap     string        `json:"pcap"`
 	Iperf    string        `json:"iperf"`
 	Combined string        `json:"combined"`
@@ -149,33 +150,34 @@ func executeBatchfile(filename string) {
 	defer rawBatchfile.Close()
 
 	var batchfile Batchfile
-	batchfileBytes := make([]byte, 5000)
-	_, err = rawBatchfile.Read(batchfileBytes)
+
+	err = json.NewDecoder(rawBatchfile).Decode(&batchfile)
 	if err != nil {
 		panic(err)
 	}
 
-	err = json.Unmarshal(batchfileBytes, &batchfile)
-	if err != nil {
-		panic(err)
-	}
-
+	counter := 0
 	for name, info := range batchfile {
+		fmt.Println("Batch: ", name, info.Dir, info.Combined, info.Pcap, info.Iperf)
 		if info.Combined != "" {
-			uploadDir := prepareCombinedUpload(name, info.Combined)
-			copy(info.Combined, "tmp/raw")
+			tracePath := fmt.Sprintf("%s/%s", info.Dir, info.Combined)
+			uploadDir := prepareCombinedUpload(name, tracePath)
+			copy(tracePath, "tmp/raw")
 			upload("tmp", uploadDir)
 		}
 		if info.Pcap != "" {
-			uploadDir := prepareCombinedUpload(name, info.Combined)
-			copy(info.Pcap, "tmp/raw")
+			pcapPath := fmt.Sprintf("%s/%s", info.Dir, info.Pcap)
+			uploadDir := preparePcapUpload(name, pcapPath, true)
+			copy(pcapPath, "tmp/raw")
 			if info.Iperf != "" {
-				copy(info.Iperf, "tmp/raw")
+				copy(fmt.Sprintf("%s/%s", info.Dir, info.Iperf), "tmp/raw")
 			}
 			upload("tmp", uploadDir)
 		}
 		uploadDir := prepareMetadataUpload(name, info.Metadata)
 		upload("tmp", uploadDir)
+		counter++
+		fmt.Println("Completed", counter, "/", len(batchfile))
 	}
 
 }

@@ -51,27 +51,27 @@ func (ll *LogLine) ToCsvRow(baseTime time.Time) []string {
 		altitude = "NA"
 	}
 	rsrp := ll.State.Drone.Signal.Rsrp
-	if rsrp == "-1" {
+	if rsrp == "-1" || rsrp == "" {
 		rsrp = "NA"
 	} else {
 		rsrp = rsrp[:len(rsrp)-3]
 	}
 	rsrq := ll.State.Drone.Signal.Rsrq
-	if rsrq == "-1" {
+	if rsrq == "-1" || rsrq == "" {
 		rsrq = "NA"
 	} else {
 		rsrq = rsrq[:len(rsrq)-2]
 	}
 	rssi := ll.State.Drone.Signal.Rssi
-	if rssi == "-1" {
+	if rssi == "-1" || rssi == "" {
 		rssi = "NA"
 	}
 	sinr := ll.State.Drone.Signal.Sinr
-	if sinr == "-1" {
+	if sinr == "-1" || sinr == "" {
 		sinr = "NA"
 	}
 	cellId := ll.State.Drone.Signal.CellId
-	if cellId == "-1" {
+	if cellId == "-1" || cellId == "" {
 		cellId = "NA"
 	}
 	uplinkBandwidth := fmt.Sprintf("%f", ll.State.Server.Iperf.Bandwidth)
@@ -119,6 +119,7 @@ func (ct *CombinedTrace) PrintCombinedInfo(outputDir string) {
 	traceScanner := bufio.NewScanner(tracefile)
 	firstTime := time.Unix(0, 0)
 	for traceScanner.Scan() {
+		fmt.Println("got to scan")
 		lineBytes := traceScanner.Bytes()
 		if err := json.Unmarshal(lineBytes, &state); err != nil {
 			panic(err)
