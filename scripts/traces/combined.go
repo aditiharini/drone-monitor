@@ -119,7 +119,6 @@ func (ct *CombinedTrace) PrintCombinedInfo(outputDir string) {
 	traceScanner := bufio.NewScanner(tracefile)
 	firstTime := time.Unix(0, 0)
 	for traceScanner.Scan() {
-		fmt.Println("got to scan")
 		lineBytes := traceScanner.Bytes()
 		if err := json.Unmarshal(lineBytes, &state); err != nil {
 			panic(err)

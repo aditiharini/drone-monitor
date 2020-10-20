@@ -142,7 +142,7 @@ func prepareMetadataUpload(batchName string, metadata TraceMetadata) string {
 	return fmt.Sprintf("Drone-Project/measurements/metadata/%s", batchName)
 }
 
-func executeBatchfile(filename string) {
+func executeBatchfile(filename string, dirStructure DirectoryStructure) {
 	rawBatchfile, err := os.Open(filename)
 	if err != nil {
 		panic(err)
@@ -160,12 +160,14 @@ func executeBatchfile(filename string) {
 	for name, info := range batchfile {
 		fmt.Println("Batch: ", name, info.Dir, info.Combined, info.Pcap, info.Iperf)
 		if info.Combined != "" {
+			dirStructure.create()
 			tracePath := fmt.Sprintf("%s/%s", info.Dir, info.Combined)
 			uploadDir := prepareCombinedUpload(name, tracePath)
 			copy(tracePath, "tmp/raw")
 			upload("tmp", uploadDir)
 		}
 		if info.Pcap != "" {
+			dirStructure.create()
 			pcapPath := fmt.Sprintf("%s/%s", info.Dir, info.Pcap)
 			uploadDir := preparePcapUpload(name, pcapPath, true)
 			copy(pcapPath, "tmp/raw")
@@ -174,6 +176,7 @@ func executeBatchfile(filename string) {
 			}
 			upload("tmp", uploadDir)
 		}
+		dirStructure.create()
 		uploadDir := prepareMetadataUpload(name, info.Metadata)
 		upload("tmp", uploadDir)
 		counter++
@@ -233,7 +236,7 @@ func main() {
 		if *batchFile == "" {
 			panic("Need to provice batch file as argument")
 		}
-		executeBatchfile(*batchFile)
+		executeBatchfile(*batchFile, dirStructure)
 	} else {
 		panic("invalid trace type")
 	}
