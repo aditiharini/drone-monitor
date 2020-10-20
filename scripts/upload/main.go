@@ -237,6 +237,7 @@ func main() {
 			panic("Need to provice batch file as argument")
 		}
 		executeBatchfile(*batchFile, dirStructure)
+		return
 	} else {
 		panic("invalid trace type")
 	}
