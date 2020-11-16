@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 )
 
@@ -31,6 +32,41 @@ func (p *PcapProcessor) NewMahimahiTrace() *os.File {
 		panic(err)
 	}
 	return file
+}
+
+func (p PcapProcessor) LossAnalysis() {
+	handle, err := pcap.OpenOffline(p.Filename)
+	if err != nil {
+		panic(err)
+	}
+
+	err = handle.SetBPFFilter(p.Filter)
+	if err != nil {
+		panic(err)
+	}
+
+	packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
+	prevSeqno := uint32(0)
+	firstTime := -1
+	numDropsEstimate := 0
+	for packet := range packetSource.Packets() {
+		tcpLayer := packet.Layer(layers.LayerTypeTCP)
+		if tcpLayer != nil {
+			arrivalTime := int(packet.Metadata().Timestamp.UnixNano() / 1000000)
+			if firstTime == -1 {
+				firstTime = arrivalTime
+			}
+			offset := arrivalTime - firstTime
+			tcpPacket, _ := tcpLayer.(*layers.TCP)
+			seqno := tcpPacket.Seq
+			if seqno < prevSeqno {
+				fmt.Println(offset)
+				numDropsEstimate++
+			}
+			prevSeqno = seqno
+		}
+	}
+	fmt.Printf("Total num drops: %d\n", numDropsEstimate)
 }
 
 func (p *PcapProcessor) ToMahiMahi() {
