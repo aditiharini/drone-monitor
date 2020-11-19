@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	trace "github.com/aditiharini/drone-monitor/scripts/traces"
 	traces "github.com/aditiharini/drone-monitor/scripts/traces"
@@ -109,8 +110,10 @@ func preparePcapUpload(batchName string, traceFile string, isTcp bool) string {
 	if isTcp {
 		proto = "tcp"
 	}
-	processor := trace.PcapProcessor{Filename: traceFile, OutputDir: "tmp/processed/traces", Filter: proto, CurrentFilenum: 0}
-	processor.ToMahiMahi()
+	processor := trace.PcapProcessor{Filename: traceFile, OutputDir: "tmp/processed/traces", Filter: proto, CurrentMahiFilenum: 0, CurrentLossFilenum: 0, FileDivisionTime: 50 * time.Second}
+	// processor.ToMahiMahi()
+	// processor.LossAnalysis()
+	processor.ToLossTrace(1 * time.Second)
 	for _, file := range processor.MahimahiFiles {
 		mmTrace := trace.MahimahiTrace{Filename: file, Dirname: "tmp/processed/traces", PacketSize: 1500}
 		mmTrace.PrintBandwidth("tmp/processed/stats")
