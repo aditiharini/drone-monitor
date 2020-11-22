@@ -38,11 +38,10 @@ func allSenderIds(filename string) []string {
 }
 
 func upload(from string, to string) {
-	uploadCmd := fmt.Sprintf("dropbox_uploader.sh upload %s %s", from, to)
+	uploadCmd := fmt.Sprintf("dropbox_uploader.sh -s upload %s %s", from, to)
 	out, err := exec.Command("bash", "-c", uploadCmd).CombinedOutput()
 	if err != nil {
 		print(string(out))
-		panic(err)
 	}
 }
 
@@ -111,9 +110,9 @@ func preparePcapUpload(batchName string, traceFile string, isTcp bool) string {
 		proto = "tcp"
 	}
 	processor := trace.PcapProcessor{Filename: traceFile, OutputDir: "tmp/processed/traces", Filter: proto, CurrentMahiFilenum: 0, CurrentLossFilenum: 0, FileDivisionTime: 50 * time.Second}
-	// processor.ToMahiMahi()
+	processor.ToMahiMahi()
 	// processor.LossAnalysis()
-	processor.ToLossTrace(1 * time.Second)
+	processor.ToLossTrace(500 * time.Millisecond)
 	for _, file := range processor.MahimahiFiles {
 		mmTrace := trace.MahimahiTrace{Filename: file, Dirname: "tmp/processed/traces", PacketSize: 1500}
 		mmTrace.PrintBandwidth("tmp/processed/stats")
@@ -167,7 +166,7 @@ func executeBatchfile(filename string, dirStructure DirectoryStructure) {
 			tracePath := fmt.Sprintf("%s/%s", info.Dir, info.Combined)
 			uploadDir := prepareCombinedUpload(name, tracePath)
 			copy(tracePath, "tmp/raw")
-			upload("tmp", uploadDir)
+			upload("tmp/*", uploadDir)
 		}
 		if info.Pcap != "" {
 			dirStructure.create()
@@ -177,11 +176,11 @@ func executeBatchfile(filename string, dirStructure DirectoryStructure) {
 			if info.Iperf != "" {
 				copy(fmt.Sprintf("%s/%s", info.Dir, info.Iperf), "tmp/raw")
 			}
-			upload("tmp", uploadDir)
+			upload("tmp/*", uploadDir)
 		}
 		dirStructure.create()
 		uploadDir := prepareMetadataUpload(name, info.Metadata)
-		upload("tmp", uploadDir)
+		upload("tmp/*", uploadDir)
 		counter++
 		fmt.Println("Completed", counter, "/", len(batchfile))
 	}
@@ -277,7 +276,7 @@ func main() {
 			panic(err)
 		}
 		if strings.ToLower(inputScanner.Text()) == "y" {
-			upload("tmp", uploadDir)
+			upload("tmp/*", uploadDir)
 		} else {
 			fmt.Println("Aborted")
 		}
