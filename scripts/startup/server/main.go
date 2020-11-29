@@ -39,7 +39,8 @@ func main() {
 
 	httpClient := http.Client{Timeout: time.Second * 1}
 
-	iperfOutfile := fmt.Sprintf("srv-%d.iperf", time.Now().Unix())
+	startTime := time.Now().Unix()
+	iperfOutfile := fmt.Sprintf("srv-%d.iperf", startTime)
 	iperfCmd := exec.Command("bash", "-c", fmt.Sprintf("stdbuf -oL iperf3 -s | tee %s", iperfOutfile))
 	utils.RunCmd(iperfCmd, "[iperf]", func(s string) {
 		utils.PostBandwidth(s, "both", httpClient, "http://3.91.1.79:10000/server/iperf")
@@ -47,7 +48,7 @@ func main() {
 	fmt.Println("Starting iperf")
 	time.Sleep(2 * time.Second)
 
-	outfile := fmt.Sprintf("srv-%d.pcap", time.Now().Unix())
+	outfile := fmt.Sprintf("srv-%d.pcap", startTime)
 	tcpdumpCmd := exec.Command("bash", "-c", fmt.Sprintf("sudo tcpdump -n -i eth0 -w %s dst port 5201", outfile))
 	utils.RunCmd(tcpdumpCmd, "[tcpdump]", print, print)
 	time.Sleep(2 * time.Second)

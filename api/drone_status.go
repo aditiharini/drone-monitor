@@ -81,24 +81,20 @@ func (s *State) Initialize() {
 
 func (s *State) ClearUnupdatedState() {
 	s.mux.Lock()
-	fmt.Println("time since drone iperf", time.Since(s.Drone.Iperf.LastUpdated))
 	if time.Since(s.Drone.Iperf.LastUpdated) > 2*time.Second {
 		s.Drone.Iperf.Bandwidth = -1
 		s.Drone.Download = -1
 		s.Drone.Iperf.LastUpdated = time.Now()
 	}
-	fmt.Println("time since server iperf", time.Since(s.Server.Iperf.LastUpdated))
 	if time.Since(s.Server.Iperf.LastUpdated) > 2*time.Second {
 		s.Server.Iperf.Bandwidth = -1
 		s.Drone.Upload = -1
 		s.Server.Iperf.LastUpdated = time.Now()
 	}
-	fmt.Println("time since ping", time.Since(s.Drone.Ping.LastUpdated))
 	if time.Since(s.Drone.Ping.LastUpdated) > 2*time.Second {
 		s.Drone.Ping.Latency = -1
 		s.Drone.Ping.LastUpdated = time.Now()
 	}
-	fmt.Println("time since singal", time.Since(s.Drone.Signal.LastUpdated))
 	if time.Since(s.Drone.Signal.LastUpdated) > 2*time.Second {
 		s.Drone.Signal.Rsrp = "-1"
 		s.Drone.Signal.Rsrq = "-1"

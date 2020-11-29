@@ -164,7 +164,7 @@ func (p *PcapProcessor) ToLossTrace(granularity time.Duration) {
 			}
 			offsetMillis := rangeStart.Sub(firstTime) / time.Millisecond
 			lossPercentage := float32(numDropsInRange) / float32(numPacketsInRange)
-			row := []string{fmt.Sprintf("%d", offsetMillis), fmt.Sprintf("%f", lossPercentage)}
+			row := []string{fmt.Sprintf("%d", offsetMillis), fmt.Sprintf("%f", lossPercentage/2.)}
 			lossTraceWriter.Write(row)
 
 			rangeStart = packetTimeUnix

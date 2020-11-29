@@ -58,7 +58,6 @@ class Monitor extends Component {
                     { this.state.drone && 
                         <div>
                             <Dji status={this.state.drone.dji}></Dji>
-                            <Saturatr status={this.state.drone.saturatr}></Saturatr>
 			    <Signal status={this.state.drone.signal}></Signal>
 			    <Iperf status={this.state.drone.iperf}></Iperf>
 			    <Ping status={this.state.drone.ping}></Ping>
@@ -71,7 +70,6 @@ class Monitor extends Component {
                     <h2>Server</h2>
                     { this.state.server && 
 			<div>
-                            <Saturatr status={this.state.server.saturatr}></Saturatr>
 			    <Iperf status={this.state.server.iperf}></Iperf>
 			</div>
                     }
@@ -85,20 +83,24 @@ export default Monitor
 
 class Iperf extends Component {
 	render() {
-	    <div>
-		<h3>Iperf</h3>
-		<p>bandwidth: {this.props.status.bandwidth}{this.props.status.unit}</p>
-  	    </div>
+	    return ( 
+	        <div>
+		    <h3>Iperf</h3>
+		    <p>bandwidth: {this.props.status.bandwidth}{this.props.status.unit}</p>
+  	        </div>
+	    )
 	}
 
 }
 
 class Ping extends Component {
 	render() {
-	    <div>
-		<h3>Ping</h3>
-		<p>latency: {this.props.status.latency}ms </p>
-  	    </div>
+	    return (
+	        <div>
+		    <h3>Ping</h3>
+		    <p>latency: {this.props.status.latency}ms </p>
+  	        </div>
+	    )
 	}
 }
 

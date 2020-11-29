@@ -19,11 +19,13 @@ type IperfInfo struct {
 func PostBandwidth(output string, direction string, httpClient http.Client, endpoint string) {
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
-		if strings.Contains(line, "sec") {
+		if strings.Contains(line, "/sec") {
 			pieces := strings.Split(strings.TrimSpace(line), "  ")
 			fmt.Println(line)
-			fmt.Println(pieces)
 			bandwidthParts := strings.Split(pieces[len(pieces)-1], " ")
+			if len(bandwidthParts) < 2 {
+				fmt.Println("Couldn't parse due to invalid formatting")
+			}
 			mbpsStr := strings.TrimSpace(bandwidthParts[0])
 			unit := strings.TrimSpace(bandwidthParts[1])
 			mbpsFloat, err := strconv.ParseFloat(mbpsStr, 32)
